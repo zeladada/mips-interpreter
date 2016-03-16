@@ -149,7 +149,7 @@ class Program {
                     }
                     tokens[i] = tok | 0;
                 }
-                switch(op) {
+                switch(op.toLowerCase()) {
                     case "addiu":
                         this.addiu(tokens[0], tokens[1], tokens[2]);
                         break;
