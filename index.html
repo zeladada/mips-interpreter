@@ -17,7 +17,7 @@
             <div class="col-md-6">
                 <p class="lead">Input your MIPS code here:</p>
                 <div class="form-group">
-                    <textarea id="code" class="form-control" rows="15" width="100%"></textarea>
+                    <textarea id="code" class="form-control" rows="15" width="100%" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
                 </div>
                 <button id="eval" class="btn btn-primary btn-block">Evaluate</button>
                 <hr>
@@ -46,7 +46,6 @@
     <script>
         document.getElementById('eval').addEventListener('click', function() {
             var code = document.getElementById('code').value;
-            console.log(code);
             var p = new Program(code);
             p.run();
             var registers = p.getRegisters();
