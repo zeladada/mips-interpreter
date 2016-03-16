@@ -5,13 +5,37 @@
     <meta name="viewport" content="width=device-width">
     <title>MIPS Interpreter</title>
     <meta name="description" content="MIPS Assembly Interpreter written in Javascript">
-    <link rel="stylesheet" type="text/css" href="mips.css">
+    <link rel="stylesheet" type="text/css" href="static/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="static/mips.css">
 </head>
 <body>
-    <textarea id="code" rows="12" cols="100"></textarea>
-    <button id="eval">Evaluate</button>
-    <script src="sprintf.min.js"></script>
-    <script src="mips.js"></script>
+    <div class="container">
+        <div class="page-header">
+            <h1>MIPS Interpreter</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="lead">Input your MIPS code here:</p>
+                <div class="form-group">
+                    <textarea id="code" class="form-control" rows="15" width="100%"></textarea>
+                </div>
+                <button id="eval" class="btn btn-primary btn-block">Evaluate</button>
+            </div>
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table table-hover table-condensed">
+                        <thead>
+                            <th>Register</th>
+                            <th>Decimal Value</th>
+                            <th>Hexadecimal Value</th>
+                        </thead>
+                        <tbody id="registers">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    <script src="static/sprintf.min.js"></script>
+    <script src="static/mips.js"></script>
     <script>
         document.getElementById('eval').addEventListener('click', function() {
             var code = document.getElementById('code').value;
@@ -19,10 +43,11 @@
             var p = new Program(code);
             p.run();
             var registers = p.getRegisters();
-            console.log(p);
+            var registersHTML = "";
             for (var i = 0; i < 32; ++i) {
-                document.write(sprintf("$%2d: %10d \t %08x<br>", i, registers[i], registers[i]));
+                registersHTML += sprintf("<tr><td>$%d</td><td>%d</td><td>0x%08x</td></tr>", i, registers[i], registers[i] >>> 0);
             }
+            document.getElementById('registers').innerHTML = registersHTML;
         });
     </script>
 </body>
