@@ -226,10 +226,11 @@ class Program {
                 }
             }
             else {
-                errmsg = "Invalid instruction [line " + line + "]: " + insn;
-                console.log(errmsg);
-                this.errors.push(errmsg);
-                console.log(this.errors);
+                if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
+                    errmsg = "Invalid instruction [line " + line + "]: " + insn;
+                    console.log(errmsg);
+                    this.errors.push(errmsg);
+                }
             }
             this.pc += 4;
         }
