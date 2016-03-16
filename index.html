@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>MIPS Interpreter</title>
+    <meta name="description" content="MIPS Assembly Interpreter written in Javascript">
+    <link rel="stylesheet" type="text/css" href="mips.css">
+</head>
+<body>
+    <textarea id="code" rows="12" cols="100"></textarea>
+    <button id="eval">Evaluate</button>
+    <script src="sprintf.min.js"></script>
+    <script src="mips.js"></script>
+    <script>
+        document.getElementById('eval').addEventListener('click', function() {
+            var code = document.getElementById('code').value;
+            console.log(code);
+            var p = new Program(code);
+            p.run();
+            var registers = p.getRegisters();
+            console.log(p);
+            for (var i = 0; i < 32; ++i) {
+                document.write(sprintf("$%2d: %10d \t %08x<br>", i, registers[i], registers[i]));
+            }
+        });
+    </script>
+</body>
