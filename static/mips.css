@@ -5,3 +5,7 @@ body {
 textarea {
     resize: vertical;
 }
+
+#registers {
+    font-family: Monospace;
+}
