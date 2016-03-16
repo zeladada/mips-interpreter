@@ -9,10 +9,15 @@ class Program {
         this.prog = instructions.split("\n").map(function(insn) {
             return insn.trim();
         });
+        this.errors = [];
     }
 
     getRegisters() {
         return this.registers.slice();
+    }
+
+    getErrors() {
+        return this.errors;
     }
 
     immPad(imm) {
@@ -22,108 +27,109 @@ class Program {
         return imm;
     }
 
-    addiu(rt,  rs,  imm) {
+    addiu(rt, rs, imm) {
         imm = this.immPad(imm);
         this.registers[rt] = this.registers[rs] + imm;
     }
 
-    andi(rt,  rs,  imm) {
+    andi(rt, rs, imm) {
         this.registers[rt] = this.registers[rs] & imm;
     }
 
-    ori(rt,  rs,  imm) {
+    ori(rt, rs, imm) {
         this.registers[rt] = this.registers[rs] | imm;
     }
 
-    xori(rt,  rs,  imm) {
+    xori(rt, rs, imm) {
         this.registers[rt] = this.registers[rs] ^ imm;
     }
 
-    slti(rt,  rs,  imm) {
+    slti(rt, rs, imm) {
         imm = this.immPad(imm);
         this.registers[rt] = (this.registers[rs] < imm) ? (1 | 0) : (0 | 0);
     }
 
-    sltiu(rt,  rs,  imm) {
+    sltiu(rt, rs, imm) {
         imm = this.immPad(imm);
         this.registers[rt] = ( (this.registers[rs] >>> 0) < (imm >>> 0) ) ? (1 | 0) : (0 | 0);
     }
 
-    addu(rd,  rs,  rt) {
+    addu(rd, rs, rt) {
         this.registers[rd] = this.registers[rs] + this.registers[rt];
     }
 
-    subu(rd,  rs,  rt) {
+    subu(rd, rs, rt) {
         this.registers[rd] = this.registers[rs] - this.registers[rt];
     }
 
-    and(rd,  rs,  rt) {
+    and(rd, rs, rt) {
         this.registers[rd] = this.registers[rs] & this.registers[rt];
     }
 
-    or(rd,  rs,  rt) {
+    or(rd, rs, rt) {
         this.registers[rd] = this.registers[rs] | this.registers[rt];
     }
 
-    xor(rd,  rs,  rt) {
+    xor(rd, rs, rt) {
         this.registers[rd] = this.registers[rs] ^ this.registers[rt];
     }
 
-    nor(rd,  rs,  rt) {
+    nor(rd, rs, rt) {
         this.registers[rd] = ~(this.registers[rs] | this.registers[rt]);
     }
 
-    slt(rd,  rs,  rt) {
+    slt(rd, rs, rt) {
         this.registers[rd] = (this.registers[rs] < this.registers[rt]) ? (1 | 0) : (0 | 0);
     }
 
-    sltu(rd,  rs,  rt) {
+    sltu(rd, rs, rt) {
         this.registers[rd] = ( (this.registers[rs] >>> 0) < (this.registers[rt] >>> 0) ) ? (1 | 0) : (0 | 0);
     }
 
-    movn(rd,  rs,  rt) {
+    movn(rd, rs, rt) {
         if (this.registers[rt] != 0) {
             this.registers[rd] = this.registers[rs];
         }
     }
 
-    movz(rd,  rs,  rt) {
+    movz(rd, rs, rt) {
         if (this.registers[rt] == 0) {
             this.registers[rd] = this.registers[rs];
         }
     }
 
-    sll(rd,  rt,  sa) {
+    sll(rd, rt, sa) {
         this.registers[rd] = this.registers[rt] << sa;
     }
 
-    srl(rd,  rt,  sa) {
+    srl(rd, rt, sa) {
         this.registers[rd] = this.registers[rt] >>> sa;
     }
 
-    sra(rd,  rt,  sa) {
+    sra(rd, rt, sa) {
         this.registers[rd] = this.registers[rt] >> sa;
     }
 
-    sllv(rd,  rt,  rs) {
+    sllv(rd, rt, rs) {
         this.registers[rd] = this.registers[rt] << (this.registers[rs] & 0x0000001f);
     }
 
-    srlv(rd,  rt,  rs) {
+    srlv(rd, rt, rs) {
         this.registers[rd] = this.registers[rt] >>> (this.registers[rs] & 0x0000001f);
     }
 
-    srav(rd,  rt,  rs) {
+    srav(rd, rt, rs) {
         this.registers[rd] = this.registers[rt] >> (this.registers[rs] & 0x0000001f);
     }
 
-    lui(rt,  imm) {
+    lui(rt, imm) {
         this.registers[rt] = imm << 16;
     }
 
     run() {
         while (this.pc / 4 < this.prog.length) {
             var insn = this.prog[this.pc / 4];
+            var line = this.pc / 4 + 1;
             if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
                 var op = insn.substring(0, insn.indexOf(' '));
                 var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
@@ -134,8 +140,11 @@ class Program {
                         trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
                     }
                     var tok = parseInt(trimmed);
-                    if (isNaN(tok)) {
+                    if (isNaN(tok)) { // deals with $ in front of register number
                         tok = parseInt(trimmed.substring(1, trimmed.length));
+                    }
+                    if (isNaN(tok)) { // definitely not a number
+                        this.errors.push("Unknown value [line " + line + "]: " + trimmed);
                     }
                     tokens[i] = tok | 0;
                 }
@@ -210,24 +219,18 @@ class Program {
                         this.lui(tokens[0], tokens[1]);
                         break;
                     default:
-                        console.log("Unsupported Op: " + op);
+                        var errmsg = "Unsupported Op [line " + line +"]: " + op;
+                        console.log(errmsg);
+                        this.errors.push(errmsg);
                 }
+            }
+            else {
+                errmsg = "Invalid instruction [line " + line + "]: " + insn;
+                console.log(errmsg);
+                this.errors.push(errmsg);
+                console.log(this.errors);
             }
             this.pc += 4;
         }
-    }
-}
-
-function processData() {
-    var input = process.stdin.read();
-    if (input == null) {
-        return;
-    }
-    var p = new Program(input);
-    p.run();
-    var registers = p.getRegisters();
-    for (var i = 0; i < 32; ++i) {
-        //document.write(String.format("$%2d: %10d \t %08x", i, registers[i], registers[i]));
-        console.log(String.format("$%2d: %10d \t 0x%08x", [i, registers[i], registers[i]]));
     }
 }

@@ -13,6 +13,10 @@
         <div class="page-header">
             <h1>MIPS Interpreter</h1>
         </div>
+        <div id="errors-container" class="alert alert-danger" style="display: none;">
+            <p class="lead">OOPS! We couldn't run your MIPS Assembly code... please fix any errors found below!</p>
+            <div id="errors"></div>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <p class="lead">Input your MIPS code here:</p>
@@ -54,6 +58,15 @@
                 registersHTML += sprintf("<tr><td>$%d</td><td>%d</td><td>0x%08x</td></tr>", i, registers[i], registers[i] >>> 0);
             }
             document.getElementById('registers').innerHTML = registersHTML;
+            var errors = p.getErrors();
+            if (errors.length > 0) {
+                document.getElementById('errors').innerHTML = errors.join('<br>');
+                document.getElementById('errors-container').style.display = "block";
+            }
+            else {
+                document.getElementById('errors').innerHTML = '';
+                document.getElementById('errors-container').style.display = "none";
+            }
         });
     </script>
 </body>

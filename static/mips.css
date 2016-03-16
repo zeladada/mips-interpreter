@@ -9,3 +9,7 @@ textarea {
 #registers {
     font-family: Monospace;
 }
+
+#errors {
+    font-family: Monospace;
+}
