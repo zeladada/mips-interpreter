@@ -8,9 +8,17 @@ textarea {
 }
 
 #registers {
-    font-family: Monospace;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+#registers td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 #errors {
-    font-family: Monospace;
+    font-family: monospace;
 }
