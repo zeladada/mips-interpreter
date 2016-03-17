@@ -3,6 +3,7 @@ class Program {
 
     constructor(instructions) {
         this.pc = 0x0;
+        this.line = 0;
         this.registers = [];
         for (var i = 0; i < 32; ++i) {
             this.registers.push((0 | 0));
@@ -21,6 +22,13 @@ class Program {
         return this.errors;
     }
 
+    normalizeImm(imm) {
+        if (imm > 0xffff) {
+            this.errors.push("Immediate more than 16 bits [line " + this.line + "]: " + imm);
+        }
+        return imm & 0xffff;
+    }
+
     immPad(imm) {
         if ((imm & 0x8000) == 0x8000) {
             imm |= 0xffff0000;
@@ -29,28 +37,34 @@ class Program {
     }
 
     addiu(rt, rs, imm) {
+        imm = this.normalizeImm(imm);
         imm = this.immPad(imm);
         this.registers[rt] = this.registers[rs] + imm;
     }
 
     andi(rt, rs, imm) {
+        imm = this.normalizeImm(imm);
         this.registers[rt] = this.registers[rs] & imm;
     }
 
     ori(rt, rs, imm) {
+        imm = this.normalizeImm(imm);
         this.registers[rt] = this.registers[rs] | imm;
     }
 
     xori(rt, rs, imm) {
+        imm = this.normalizeImm(imm);
         this.registers[rt] = this.registers[rs] ^ imm;
     }
 
     slti(rt, rs, imm) {
+        imm = this.normalizeImm(imm);
         imm = this.immPad(imm);
         this.registers[rt] = (this.registers[rs] < imm) ? (1 | 0) : (0 | 0);
     }
 
     sltiu(rt, rs, imm) {
+        imm = this.normalizeImm(imm);
         imm = this.immPad(imm);
         this.registers[rt] = ( (this.registers[rs] >>> 0) < (imm >>> 0) ) ? (1 | 0) : (0 | 0);
     }
@@ -124,13 +138,14 @@ class Program {
     }
 
     lui(rt, imm) {
+        imm = this.normalizeImm(imm);
         this.registers[rt] = imm << 16;
     }
 
     run() {
         while (this.pc / 4 < this.prog.length) {
             var insn = this.prog[this.pc / 4];
-            var line = this.pc / 4 + 1;
+            this.line = this.pc / 4 + 1;
             if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
                 var op = insn.substring(0, insn.indexOf(' '));
                 var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
@@ -145,7 +160,7 @@ class Program {
                         tok = parseInt(trimmed.substring(1, trimmed.length));
                     }
                     if (isNaN(tok)) { // definitely not a number
-                        this.errors.push("Unknown value [line " + line + "]: " + trimmed);
+                        this.errors.push("Unknown value [line " + this.line + "]: " + trimmed);
                     }
                     tokens[i] = tok | 0;
                 }
@@ -220,14 +235,14 @@ class Program {
                         this.lui(tokens[0], tokens[1]);
                         break;
                     default:
-                        var errmsg = "Unsupported Op [line " + line +"]: " + op;
+                        var errmsg = "Unsupported Op [line " + this.line +"]: " + op;
                         console.log(errmsg);
                         this.errors.push(errmsg);
                 }
             }
             else {
                 if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
-                    errmsg = "Invalid instruction [line " + line + "]: " + insn;
+                    errmsg = "Invalid instruction [line " + this.line + "]: " + insn;
                     console.log(errmsg);
                     this.errors.push(errmsg);
                 }
