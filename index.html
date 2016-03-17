@@ -6,6 +6,7 @@
     <title>MIPS Interpreter</title>
     <meta name="description" content="MIPS Assembly Interpreter written in Javascript">
     <link rel="stylesheet" type="text/css" href="static/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="static/jquery-linedtextarea.css">
     <link rel="stylesheet" type="text/css" href="static/mips.css">
 </head>
 <body>
@@ -21,7 +22,7 @@
             <div class="col-md-6">
                 <p class="lead">Input your MIPS code here:</p>
                 <div class="form-group">
-                    <textarea id="code" class="form-control" rows="15" width="100%" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+                    <textarea id="code" rows="15" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
                 </div>
                 <button id="eval" class="btn btn-primary btn-block">Evaluate</button>
                 <hr>
@@ -45,9 +46,14 @@
             </div>
         </div>
     </div>
+    <script src="static/jquery.min.js"></script>
     <script src="static/sprintf.min.js"></script>
+    <script src="static/jquery-linedtextarea.js"></script>
     <script src="static/mips.js"></script>
     <script>
+        $('#code').linedtextarea(
+            {selectedLine: 1}
+        );
         document.getElementById('eval').addEventListener('click', function() {
             var code = document.getElementById('code').value;
             var p = new Program(code);
