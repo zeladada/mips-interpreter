@@ -8,7 +8,7 @@ class Program {
         for (var i = 0; i < 32; ++i) {
             this.registers.push((0 | 0));
         }
-        this.prog = instructions.split("\n").map(function(insn) {
+        this.insns = instructions.split("\n").map(function(insn) {
             return insn.trim();
         });
         this.errors = [];
@@ -144,7 +144,7 @@ class Program {
 
     step() {
         this.line = this.pc / 4 + 1;
-        var insn = this.prog[this.pc / 4];
+        var insn = this.insns[this.pc / 4];
         if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
             var op = insn.substring(0, insn.indexOf(' '));
             var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
@@ -249,8 +249,15 @@ class Program {
         }
     }
 
+    runUntil(line) {
+        while(((this.pc / 4) | 0) != line && this.pc / 4 < this.insns.length) {
+            this.step();
+            this.pc += 4;
+        }
+    }
+
     run() {
-        while (this.pc / 4 < this.prog.length) {
+        while (this.pc / 4 < this.insns.length) {
             this.step();
             this.pc += 4;
         }

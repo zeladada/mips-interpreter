@@ -14,6 +14,7 @@
         <div class="page-header">
             <h1>MIPS Interpreter</h1>
         </div>
+        <div id="warnings-container" class="alert alert-warning" style="display: none;"></div>
         <div id="errors-container" class="alert alert-danger" style="display: none;">
             <p class="lead">OOPS! Your MIPS Assembly code ran, but there were errors...</p>
             <div id="errors"></div>
@@ -26,6 +27,7 @@
                 </div>
                 <button id="eval" class="btn btn-primary btn-block">Evaluate</button>
                 <hr>
+                <p><strong>NEW!</strong> Set a breakpoint by clicking on the line number.</p>
                 <p>Operands supported:<br>
                     <code>ADDIU</code>, <code>ANDI</code>, <code>ORI</code>, <code>XORI</code>, <code>SLTI</code>, <code>SLTIU</code>, <code>ADDU</code>, <code>SUBU</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>NOR</code>, <code>SLT</code>, <code>SLTU</code>, <code>MOVN</code>, <code>MOVZ</code>, <code>SLL</code>, <code>SRL</code>, <code>SRA</code>, <code>SLLV</code>, <code>SRLV</code>, <code>SRAV</code>, <code>LUI</code>
                 </p>
@@ -85,25 +87,53 @@
     <script src="static/mips.js"></script>
     <script>
         $('#code').linedtextarea();
+        $('.codelines').on('click', '.lineno', function() {
+            $(this).toggleClass('lineselect');
+        });
+    </script>
+    <script>
         document.getElementById('eval').addEventListener('click', function() {
+            clearAlerts(); // Clear any previous warnings/errors
             var code = document.getElementById('code').value;
             var p = new Program(code);
-            p.run();
-            var registers = p.getRegisters();
+            var breakpoints = document.getElementsByClassName('lineselect');
+            if (breakpoints.length > 0) { // there is a breakpoint
+                var breakline = parseInt(breakpoints[0].innerHTML);
+                p.runUntil(breakline);
+                if (breakline <= p.insns.length) {
+                    document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + breakline + ". Breakpoint!";
+                    document.getElementById('warnings-container').style.display = "block";
+                }
+            }
+            else { // no breakpoint selected
+                p.run();
+            }
+            displayRegisters(p);
+            displayErrors(p);
+        });
+
+        function displayRegisters(prog) {
+            var registers = prog.getRegisters();
             var registersHTML = "";
             for (var i = 0; i < 32; ++i) {
                 registersHTML += sprintf("<tr><td>$%d</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>", i, registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
             }
             document.getElementById('registers').innerHTML = registersHTML;
-            var errors = p.getErrors();
+        }
+
+        function displayErrors(prog) {
+            var errors = prog.getErrors();
             if (errors.length > 0) {
                 document.getElementById('errors').innerHTML = errors.join('<br>');
                 document.getElementById('errors-container').style.display = "block";
             }
-            else {
-                document.getElementById('errors').innerHTML = '';
-                document.getElementById('errors-container').style.display = "none";
-            }
-        });
+        }
+
+        function clearAlerts() {
+            document.getElementById('warnings-container').innerHTML = '';
+            document.getElementById('warnings-container').style.display = "none";
+            document.getElementById('errors').innerHTML = '';
+            document.getElementById('errors-container').style.display = "none";
+        }
     </script>
 </body>
