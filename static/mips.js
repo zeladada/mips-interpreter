@@ -142,112 +142,116 @@ class Program {
         this.registers[rt] = imm << 16;
     }
 
-    run() {
-        while (this.pc / 4 < this.prog.length) {
-            var insn = this.prog[this.pc / 4];
-            this.line = this.pc / 4 + 1;
-            if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
-                var op = insn.substring(0, insn.indexOf(' '));
-                var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
-                var tokens = [];
-                for (var i = 0; i < stringTokens.length; ++i) {
-                    var trimmed = stringTokens[i].trim();
-                    if (trimmed.indexOf('#') != -1) { // remove comments
-                        trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
-                    }
-                    var tok = parseInt(trimmed);
-                    if (isNaN(tok)) { // deals with $ in front of register number
-                        tok = parseInt(trimmed.substring(1, trimmed.length));
-                    }
-                    if (isNaN(tok)) { // definitely not a number
-                        this.errors.push("Unknown value [line " + this.line + "]: " + trimmed);
-                    }
-                    tokens[i] = tok | 0;
+    step() {
+        this.line = this.pc / 4 + 1;
+        var insn = this.prog[this.pc / 4];
+        if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
+            var op = insn.substring(0, insn.indexOf(' '));
+            var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
+            var tokens = [];
+            for (var i = 0; i < stringTokens.length; ++i) {
+                var trimmed = stringTokens[i].trim();
+                if (trimmed.indexOf('#') != -1) { // remove comments
+                    trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
                 }
-                switch(op.toLowerCase()) {
-                    case "addiu":
-                        this.addiu(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "andi":
-                        this.andi(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "ori":
-                        this.ori(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "xori":
-                        this.xori(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "slti":
-                        this.slti(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "sltiu":
-                        this.sltiu(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "addu":
-                        this.addu(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "subu":
-                        this.subu(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "and":
-                        this.and(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "or":
-                        this.or(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "xor":
-                        this.xor(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "nor":
-                        this.nor(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "slt":
-                        this.slt(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "sltu":
-                        this.sltu(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "movn":
-                        this.movn(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "movz":
-                        this.movz(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "sll":
-                        this.sll(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "srl":
-                        this.srl(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "sra":
-                        this.sra(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "sllv":
-                        this.sllv(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "srlv":
-                        this.srlv(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "srav":
-                        this.srav(tokens[0], tokens[1], tokens[2]);
-                        break;
-                    case "lui":
-                        this.lui(tokens[0], tokens[1]);
-                        break;
-                    default:
-                        var errmsg = "Unsupported Op [line " + this.line +"]: " + op;
-                        console.log(errmsg);
-                        this.errors.push(errmsg);
+                var tok = parseInt(trimmed);
+                if (isNaN(tok)) { // deals with $ in front of register number
+                    tok = parseInt(trimmed.substring(1, trimmed.length));
                 }
-                this.registers[0] = 0 | 0; // MIPS register 0 is hard-wired to 0
+                if (isNaN(tok)) { // definitely not a number
+                    this.errors.push("Unknown value [line " + this.line + "]: " + trimmed);
+                }
+                tokens[i] = tok | 0;
             }
-            else {
-                if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
-                    errmsg = "Invalid instruction [line " + this.line + "]: " + insn;
+            switch(op.toLowerCase()) {
+                case "addiu":
+                    this.addiu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "andi":
+                    this.andi(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "ori":
+                    this.ori(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "xori":
+                    this.xori(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "slti":
+                    this.slti(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sltiu":
+                    this.sltiu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "addu":
+                    this.addu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "subu":
+                    this.subu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "and":
+                    this.and(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "or":
+                    this.or(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "xor":
+                    this.xor(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "nor":
+                    this.nor(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "slt":
+                    this.slt(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sltu":
+                    this.sltu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "movn":
+                    this.movn(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "movz":
+                    this.movz(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sll":
+                    this.sll(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "srl":
+                    this.srl(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sra":
+                    this.sra(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sllv":
+                    this.sllv(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "srlv":
+                    this.srlv(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "srav":
+                    this.srav(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "lui":
+                    this.lui(tokens[0], tokens[1]);
+                    break;
+                default:
+                    var errmsg = "Unsupported Op [line " + this.line +"]: " + op;
                     console.log(errmsg);
                     this.errors.push(errmsg);
-                }
             }
+            this.registers[0] = 0 | 0; // MIPS register 0 is hard-wired to 0
+        }
+        else {
+            if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
+                errmsg = "Invalid instruction [line " + this.line + "]: " + insn;
+                console.log(errmsg);
+                this.errors.push(errmsg);
+            }
+        }
+    }
+
+    run() {
+        while (this.pc / 4 < this.prog.length) {
+            this.step();
             this.pc += 4;
         }
     }
