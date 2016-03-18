@@ -239,6 +239,7 @@ class Program {
                         console.log(errmsg);
                         this.errors.push(errmsg);
                 }
+                this.registers[0] = 0 | 0; // MIPS register 0 is hard-wired to 0
             }
             else {
                 if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
