@@ -147,6 +147,109 @@ class Program {
         this.registers[rt] = imm << 16;
     }
 
+    parseRegister(tok) {
+        switch(tok) {
+            case "$zero":
+            case "$0":
+                return 0;
+            case "$at":
+            case "$1":
+                return 1;
+            case "$v0":
+            case "$2":
+                return 2;
+            case "$v1":
+            case "$3":
+                return 3;
+            case "$a0":
+            case "$4":
+                return 4;
+            case "$a1":
+            case "$5":
+                return 5;
+            case "$a2":
+            case "$6":
+                return 6;
+            case "$a3":
+            case "$7":
+                return 7;
+            case "$t0":
+            case "$8":
+                return 8;
+            case "$t1":
+            case "$9":
+                return 9;
+            case "$t2":
+            case "$10":
+                return 10;
+            case "$t3":
+            case "$11":
+                return 11;
+            case "$t4":
+            case "$12":
+                return 12;
+            case "$t5":
+            case "$13":
+                return 13;
+            case "$t6":
+            case "$14":
+                return 14;
+            case "$t7":
+            case "$15":
+                return 15;
+            case "$s0":
+            case "$16":
+                return 16;
+            case "$s1":
+            case "$17":
+                return 17;
+            case "$s2":
+            case "$18":
+                return 18;
+            case "$s3":
+            case "$19":
+                return 19;
+            case "$s4":
+            case "$20":
+                return 20;
+            case "$s5":
+            case "$21":
+                return 21;
+            case "$s6":
+            case "$22":
+                return 22;
+            case "$s7":
+            case "$23":
+                return 23;
+            case "$t8":
+            case "$24":
+                return 24;
+            case "$t9":
+            case "$25":
+                return 25;
+            case "$k0":
+            case "$26":
+                return 26;
+            case "$k1":
+            case "$27":
+                return 27;
+            case "$gp":
+            case "$28":
+                return 28;
+            case "$sp":
+            case "$29":
+                return 29;
+            case "$fp":
+            case "$30":
+                return 30;
+            case "$ra":
+            case "$31":
+                return 31;
+        }
+        this.pushError("Invalid register [line " + this.line + "]: " + tok);
+        return undefined; // invalid register
+    }
+
     step() {
         this.line = this.pc / 4 + 1;
         var insn = this.insns[this.pc / 4];
@@ -161,8 +264,8 @@ class Program {
                     trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
                 }
                 var tok = parseInt(trimmed);
-                if (isNaN(tok)) { // deals with $ in front of register number
-                    tok = parseInt(trimmed.substring(1, trimmed.length));
+                if (isNaN(tok)) { // attempts to parse register
+                    tok = this.parseRegister(trimmed);
                 }
                 if (isNaN(tok)) { // definitely not a number
                     this.pushError("Unknown value [line " + this.line + "]: " + trimmed);
