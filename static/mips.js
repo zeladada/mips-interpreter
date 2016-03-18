@@ -22,9 +22,14 @@ class Program {
         return this.errors;
     }
 
+    pushError(errmsg) {
+        console.log(errmsg);
+        this.errors.push(errmsg);
+    }
+
     normalizeImm(imm) {
         if (imm > 0xffff) {
-            this.errors.push("Immediate more than 16 bits [line " + this.line + "]: " + imm);
+            this.pushError("Immediate more than 16 bits [line " + this.line + "]: " + imm);
         }
         return imm & 0xffff;
     }
@@ -160,7 +165,7 @@ class Program {
                     tok = parseInt(trimmed.substring(1, trimmed.length));
                 }
                 if (isNaN(tok)) { // definitely not a number
-                    this.errors.push("Unknown value [line " + this.line + "]: " + trimmed);
+                    this.pushError("Unknown value [line " + this.line + "]: " + trimmed);
                 }
                 tokens[i] = tok | 0;
             }
@@ -235,17 +240,13 @@ class Program {
                     this.lui(tokens[0], tokens[1]);
                     break;
                 default:
-                    var errmsg = "Unsupported Op [line " + this.line +"]: " + op;
-                    console.log(errmsg);
-                    this.errors.push(errmsg);
+                    this.pushError("Unsupported Op [line " + this.line +"]: " + op);
             }
             this.registers[0] = 0 | 0; // MIPS register 0 is hard-wired to 0
         }
         else {
             if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
-                errmsg = "Invalid instruction [line " + this.line + "]: " + insn;
-                console.log(errmsg);
-                this.errors.push(errmsg);
+                this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
             }
         }
     }
