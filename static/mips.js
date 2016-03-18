@@ -145,6 +145,7 @@ class Program {
     step() {
         this.line = this.pc / 4 + 1;
         var insn = this.insns[this.pc / 4];
+        this.pc += 4;
         if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
             var op = insn.substring(0, insn.indexOf(' '));
             var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
@@ -252,14 +253,12 @@ class Program {
     runUntil(line) {
         while(((this.pc / 4) | 0) != line && this.pc / 4 < this.insns.length) {
             this.step();
-            this.pc += 4;
         }
     }
 
     run() {
         while (this.pc / 4 < this.insns.length) {
             this.step();
-            this.pc += 4;
         }
     }
 }
