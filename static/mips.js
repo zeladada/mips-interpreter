@@ -3,7 +3,7 @@ class Program {
 
     constructor(instructions) {
         this.errors = [];
-        this.pc = 0x0 | 0;
+        this.pc = 0x0;
         this.line = 0;
         this.registers = new Int32Array(32);
         this.memory = new Int32Array((0xffffff + 1) / 4); // Creates a memory array addressable by 24-bit addresses = 64 MB
@@ -269,6 +269,20 @@ class Program {
         return undefined; // invalid register
     }
 
+    parseToken(tok) {
+        var value;
+        if (tok.charAt(0) == '$') {
+            value = this.parseRegister(tok);
+        }
+        else {
+            value = parseInt(tok);
+            if (isNaN(value)) {
+                this.pushError("Unknown value [line " + this.line + "]: " + tok);
+            }
+        }
+        return value;
+    }
+
     step() {
         this.line = this.pc / 4 + 1;
         var insn = this.insns[this.pc / 4];
@@ -279,17 +293,14 @@ class Program {
             var tokens = [];
             for (var i = 0; i < stringTokens.length; ++i) {
                 var trimmed = stringTokens[i].trim();
-                if (trimmed.indexOf('#') != -1) { // remove comments
+                if (trimmed.indexOf('#') != -1) { // remove end of line comments
                     trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
+                    tokens[i] = this.parseToken(trimmed);
+                    break;
                 }
-                var tok = parseInt(trimmed);
-                if (isNaN(tok)) { // attempts to parse register
-                    tok = this.parseRegister(trimmed);
+                else {
+                    tokens[i] = this.parseToken(trimmed);
                 }
-                if (isNaN(tok)) { // definitely not a number
-                    this.pushError("Unknown value [line " + this.line + "]: " + trimmed);
-                }
-                tokens[i] = tok;
             }
             switch(op.toLowerCase()) {
                 case "addiu":
