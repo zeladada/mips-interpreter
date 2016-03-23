@@ -12,19 +12,59 @@ class Program {
         });
         this.labels = {};
         this.generateLabels();
+        this.linkLabels();
     }
 
     /** Goes through all the lines and finds the labels and associates pc addresses to them */
     generateLabels() {
+        var filteredInstructions = [];
+        var filteredIndex = 0;
         for (var i = 0; i < this.insns.length; ++i) {
             var insn = this.insns[i];
             if (insn.charAt(insn.length-1) == ':') { // encounter a label which ends with a colon
                 var label = insn.substring(0, insn.length-1);
                 if (this.labels[label] !== undefined) {
-                    this.pushError("Found multiple instances of label: " + label);
+                    this.pushError("Found multiple instances of label: " + label + " [line " + i + "]");
                 }
-                this.labels[label] = (i + 2) * 4; // make label point to the line after it (also zero-index -> one-index)
-                this.insns[i] = ""; // remove label so that it does not affect running
+                if (/(d+)/.test(label)) {
+                    this.pushError("Cannot use numbers in label name: " + label + " [line " + i + "]");
+                    continue;
+                }
+                this.labels[label] = filteredIndex; // make label point to the line after it (also zero-index -> one-index)
+            }
+            else if (insn != '' && insn.charAt(0) != '#') { // ignore empty/comment lines
+                filteredInstructions.push([insn, i + 1]); // push instruction and line number for debugging purposes
+                filteredIndex++;
+            }
+        }
+        this.insns = filteredInstructions;
+    }
+
+    /** Converts labels to memory locations */
+    linkLabels() {
+        for (var i = 0; i < this.insns.length; ++i) {
+            var insn = this.insns[i][0];
+            if (insn.indexOf(' ') != -1) { // ignore changing labels of bad instructions
+                var op = insn.substring(0, insn.indexOf(' ')).toLowerCase();
+                var tokens = insn.substring(insn.indexOf(' '), insn.length).split(',');
+                var label = tokens[tokens.length-1].trim(); // label comes at the very end
+                if (op == "j" || op == "jal") {
+                    if (this.labels[label] !== undefined) {
+                        tokens[tokens.length-1] = this.labels[label];
+                    }
+                    else {
+                        tokens[tokens.length-1] = 0x3ffffff; // most likely a label issue, so we want it to jump very far to the end
+                    }
+                }
+                else if (op == "beq" || op == "bne" || op == "bltz" || op == "blez" || op == "bgtz" || op == "bgez") {
+                    if (this.labels[label] !== undefined) {
+                        tokens[tokens.length-1] = this.labels[label] - i;
+                    }
+                    else {
+                        tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to branch very far to the end
+                    }
+                }
+                this.insns[i][0] = op + " " + tokens.join(', '); // instruction with labels replaced
             }
         }
     }
@@ -216,6 +256,7 @@ class Program {
     }
 
     beq(rs, rt, offset) {
+        offset = immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -227,6 +268,7 @@ class Program {
     }
 
     bne(rs, rt, offset) {
+        offset = immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -238,6 +280,7 @@ class Program {
     }
 
     bltz(rs, offset) {
+        offset = immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -249,6 +292,7 @@ class Program {
     }
 
     blez(rs, offset) {
+        offset = immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -260,6 +304,7 @@ class Program {
     }
 
     bgtz(rs, offset) {
+        offset = immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -271,6 +316,7 @@ class Program {
     }
 
     bgez(rs, offset) {
+        offset = immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -444,17 +490,10 @@ class Program {
     }
 
     step() {
-        var insn = this.insns[this.pc / 4];
-        while (insn == '' || insn.charAt(0) == '#') { // skip empty lines and comments
-            this.pc += 4;
-            if ((this.pc / 4) >= this.insns.length) { // reached the end of the file
-                return;
-            }
-            insn = this.insns[this.pc / 4];
-        }
-        this.line = this.pc / 4 + 1;
+        var insn = this.insns[this.pc / 4][0];
+        this.line = this.insns[this.pc / 4][1];
         this.pc += 4;
-        if (insn.indexOf(' ') != -1) { // bad format, since all instructions have a space after the op
+        if (insn.indexOf(' ') != -1) { // if not bad format, since all instructions have a space after the op
             var op = insn.substring(0, insn.indexOf(' '));
             var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
             var tokens = [];
@@ -597,7 +636,9 @@ class Program {
             this.registers[0] = 0; // MIPS register 0 is hard-wired to 0
         }
         else {
-            this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
+            if (insn != "nop") { // nops are valid instructions!
+                this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
+            }
         }
     }
 
