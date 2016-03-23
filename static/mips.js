@@ -22,6 +22,9 @@ class Program {
         for (var i = 0; i < this.insns.length; ++i) {
             var lineNo = i + 1;
             var insn = this.insns[i];
+            if (insn.indexOf('#') != -1) { // remove everything after a comment
+                insn = insn.substring(0, insn.indexOf('#')).trim();
+            }
             if (insn.charAt(insn.length-1) == ':') { // encounter a label which ends with a colon
                 var label = insn.substring(0, insn.length-1);
                 if (this.labels[label] !== undefined) {
@@ -33,7 +36,7 @@ class Program {
                 }
                 this.labels[label] = filteredIndex; // make label point to the line after it (also zero-index -> one-index)
             }
-            else if (insn != '' && insn.charAt(0) != '#') { // ignore empty/comment lines
+            else if (insn != '') { // ignore empty/comment lines
                 filteredInstructions.push([insn, lineNo]); // push instruction and line number for debugging purposes
                 filteredIndex++;
             }
