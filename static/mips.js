@@ -14,7 +14,7 @@ class Program {
         this.generateLabels();
     }
 
-    /* Goes through all the lines and finds the labels and associates pc addresses to them */
+    /** Goes through all the lines and finds the labels and associates pc addresses to them */
     generateLabels() {
         for (var i = 0; i < this.insns.length; ++i) {
             var insn = this.insns[i];
@@ -60,9 +60,11 @@ class Program {
         return imm;
     }
 
-    verifyMemory(loc) {
-        if (loc < 0 || loc >= 0xfffffff + 1) {
-            this.pushError("Invalid memory location [line " + this.line + "]: " + loc);
+    /** Verifies a memory range from loc1 - loc2 */
+    verifyMemory(loc1, loc2) {
+        if (loc1 < 0 || loc1 >= 0xfffffff + 1 || loc2 < 0 || loc2 >= 0xfffffff + 1) {
+            this.pushError("Invalid memory location [line " + this.line + "]: " + loc1 +
+                    ((loc2 === undefined) ? "" : " to " + loc2));
         }
     }
 
@@ -174,8 +176,7 @@ class Program {
 
     lw(rt, offset, base) {
         var loc = offset + this.registers[base];
-        this.verifyMemory(loc);
-        this.verifyMemory(loc + 3);
+        this.verifyMemory(loc, loc+3);
         var lsb = this.memory[loc];
         var byte2 = this.memory[loc+1] << 8;
         var byte3 = this.memory[loc+2] << 16;
@@ -202,8 +203,7 @@ class Program {
     sw(rt, offset, base) {
         var registerValue = this.registers[rt];
         var loc = offset + this.registers[base];
-        this.verifyMemory(loc);
-        this.verifyMemory(loc + 3);
+        this.verifyMemory(loc, loc+3);
         this.memory[loc] = registerValue & 0xffffff00;
         this.memory[loc+1] = (registerValue >>> 8) & 0xffffff00;
         this.memory[loc+2] = (registerValue >>> 16) & 0xffffff00;
