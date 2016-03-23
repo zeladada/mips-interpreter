@@ -2,12 +2,9 @@
 class Program {
 
     constructor(instructions) {
-        this.pc = 0x0;
+        this.pc = 0x0 | 0;
         this.line = 0;
-        this.registers = [];
-        for (var i = 0; i < 32; ++i) {
-            this.registers.push((0 | 0));
-        }
+        this.registers = new Int32Array(32);
         this.insns = instructions.split("\n").map(function(insn) {
             return insn.trim();
         });
@@ -15,7 +12,11 @@ class Program {
     }
 
     getRegisters() {
-        return this.registers.slice();
+        var registerCopy = [];
+        for (var i = 0; i < 32; ++i) {
+            registerCopy.push(this.registers[i]);
+        }
+        return registerCopy;
     }
 
     getErrors() {
@@ -65,13 +66,13 @@ class Program {
     slti(rt, rs, imm) {
         imm = this.normalizeImm(imm);
         imm = this.immPad(imm);
-        this.registers[rt] = (this.registers[rs] < imm) ? (1 | 0) : (0 | 0);
+        this.registers[rt] = (this.registers[rs] < imm) ? 1 : 0;
     }
 
     sltiu(rt, rs, imm) {
         imm = this.normalizeImm(imm);
         imm = this.immPad(imm);
-        this.registers[rt] = ( (this.registers[rs] >>> 0) < (imm >>> 0) ) ? (1 | 0) : (0 | 0);
+        this.registers[rt] = ( (this.registers[rs] >>> 0) < (imm >>> 0) ) ? 1 : 0;
     }
 
     addu(rd, rs, rt) {
@@ -99,11 +100,11 @@ class Program {
     }
 
     slt(rd, rs, rt) {
-        this.registers[rd] = (this.registers[rs] < this.registers[rt]) ? (1 | 0) : (0 | 0);
+        this.registers[rd] = (this.registers[rs] < this.registers[rt]) ? 1 : 0;
     }
 
     sltu(rd, rs, rt) {
-        this.registers[rd] = ( (this.registers[rs] >>> 0) < (this.registers[rt] >>> 0) ) ? (1 | 0) : (0 | 0);
+        this.registers[rd] = ( (this.registers[rs] >>> 0) < (this.registers[rt] >>> 0) ) ? 1 : 0;
     }
 
     movn(rd, rs, rt) {
@@ -270,7 +271,7 @@ class Program {
                 if (isNaN(tok)) { // definitely not a number
                     this.pushError("Unknown value [line " + this.line + "]: " + trimmed);
                 }
-                tokens[i] = tok | 0;
+                tokens[i] = tok;
             }
             switch(op.toLowerCase()) {
                 case "addiu":
@@ -345,7 +346,7 @@ class Program {
                 default:
                     this.pushError("Unsupported Op [line " + this.line +"]: " + op);
             }
-            this.registers[0] = 0 | 0; // MIPS register 0 is hard-wired to 0
+            this.registers[0] = 0; // MIPS register 0 is hard-wired to 0
         }
         else {
             if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
@@ -355,13 +356,13 @@ class Program {
     }
 
     runUntil(line) {
-        while(((this.pc / 4) | 0) != line && this.pc / 4 < this.insns.length) {
+        while((this.pc / 4) != line && (this.pc / 4) < this.insns.length) {
             this.step();
         }
     }
 
     run() {
-        while (this.pc / 4 < this.insns.length) {
+        while ((this.pc / 4) < this.insns.length) {
             this.step();
         }
     }
