@@ -128,7 +128,6 @@
             if (globalP === undefined) {
                 setup();
             }
-            console.log(globalP.insn);
             if (globalP.pc / 4 < globalP.insns.length) {
                 var currentInsn = globalP.insns[globalP.pc / 4];
                 document.getElementById('current-instruction').innerHTML = "[line " + currentInsn[1] + "]: " + currentInsn[0];

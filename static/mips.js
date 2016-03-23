@@ -371,16 +371,16 @@ class Program {
         var registerValue = this.registers[rt];
         var loc = offset + this.registers[base];
         this.verifyMemory(loc, loc+3);
-        this.memory[loc] = registerValue & 0xffffff00;
-        this.memory[loc+1] = (registerValue >>> 8) & 0xffffff00;
-        this.memory[loc+2] = (registerValue >>> 16) & 0xffffff00;
-        this.memory[loc+3] = (registerValue >>> 24) & 0xffffff00;
+        this.memory[loc] = registerValue & 0x000000ff;
+        this.memory[loc+1] = (registerValue >>> 8) & 0x000000ff;
+        this.memory[loc+2] = (registerValue >>> 16) & 0x000000ff;
+        this.memory[loc+3] = (registerValue >>> 24) & 0x000000ff;
     }
 
     sb(rt, offset, base) {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc);
-        this.memory[loc] = this.registers[rt] & 0xffffff00;
+        this.memory[loc] = this.registers[rt] & 0x000000ff;
     }
 
     parseRegister(tok) {
