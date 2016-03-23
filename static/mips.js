@@ -2,13 +2,31 @@
 class Program {
 
     constructor(instructions) {
+        this.errors = [];
         this.pc = 0x0 | 0;
         this.line = 0;
         this.registers = new Int32Array(32);
-        this.insns = instructions.split("\n").map(function(insn) {
+        this.memory = new Int32Array((0xffffff + 1) / 4); // Creates a memory array addressable by 24-bit addresses = 64 MB
+        this.insns = instructions.split('\n').map(function(insn) {
             return insn.trim();
         });
-        this.errors = [];
+        this.labels = {};
+        this.generateLabels();
+    }
+
+    /* Goes through all the lines and finds the labels and associates pc addresses to them */
+    generateLabels() {
+        for (var i = 0; i < this.insns.length; ++i) {
+            var insn = this.insns[i];
+            if (insn.charAt(insn.length-1) == ':') { // encounter a label which ends with a colon
+                var label = insn.substring(0, insn.length-1);
+                if (this.labels[label] !== undefined) {
+                    this.pushError("Found multiple instances of label: " + label);
+                }
+                this.labels[label] = i + 2; // make label point to the line after it (also zero-index -> one-index)
+                this.insns[i] = ""; // remove label so that it does not affect running
+            }
+        }
     }
 
     getRegisters() {
