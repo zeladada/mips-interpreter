@@ -337,6 +337,9 @@ class Program {
         var insn = this.insns[this.pc / 4];
         while (insn == '' || insn.charAt(0) == '#') { // skip empty lines and comments
             this.pc += 4;
+            if ((this.pc / 4) >= this.insns.length) { // reached the end of the file
+                return;
+            }
             insn = this.insns[this.pc / 4];
         }
         this.line = this.pc / 4 + 1;
