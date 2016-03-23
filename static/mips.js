@@ -334,10 +334,14 @@ class Program {
     }
 
     step() {
-        this.line = this.pc / 4 + 1;
         var insn = this.insns[this.pc / 4];
+        while (insn == '' || insn.charAt(0) == '#') { // skip empty lines and comments
+            this.pc += 4;
+            insn = this.insns[this.pc / 4];
+        }
+        this.line = this.pc / 4 + 1;
         this.pc += 4;
-        if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
+        if (insn.indexOf(' ') != -1) { // bad format, since all instructions have a space after the op
             var op = insn.substring(0, insn.indexOf(' '));
             var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
             var tokens = [];
@@ -450,9 +454,7 @@ class Program {
             this.registers[0] = 0; // MIPS register 0 is hard-wired to 0
         }
         else {
-            if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
-                this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
-            }
+            this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
         }
     }
 
