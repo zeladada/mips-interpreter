@@ -55,7 +55,7 @@ class Program {
                 var label = tokens[tokens.length-1].trim(); // label comes at the very end
                 if (op == "j" || op == "jal") {
                     if (this.labels[label] !== undefined) {
-                        tokens[tokens.length-1] = this.labels[label];
+                        tokens[tokens.length-1] = this.labels[label]; // absolute jump to the label location
                     }
                     else {
                         this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
@@ -64,7 +64,7 @@ class Program {
                 }
                 else if (op == "beq" || op == "bne" || op == "bltz" || op == "blez" || op == "bgtz" || op == "bgez") {
                     if (this.labels[label] !== undefined) {
-                        tokens[tokens.length-1] = this.labels[label] - (i + 4);
+                        tokens[tokens.length-1] = this.labels[label] - (i + 1); // branch offset relative to delay slot instruction
                     }
                     else {
                         this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
