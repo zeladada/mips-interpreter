@@ -48,6 +48,7 @@ class Program {
     linkLabels() {
         for (var i = 0; i < this.insns.length; ++i) {
             var insn = this.insns[i][0];
+            var lineNo = this.insns[i][1];
             if (insn.indexOf(' ') != -1) { // ignore changing labels of bad instructions
                 var op = insn.substring(0, insn.indexOf(' ')).toLowerCase();
                 var tokens = insn.substring(insn.indexOf(' '), insn.length).split(',');
@@ -57,14 +58,16 @@ class Program {
                         tokens[tokens.length-1] = this.labels[label];
                     }
                     else {
+                        this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
                         tokens[tokens.length-1] = 0x3ffffff; // most likely a label issue, so we want it to jump very far to the end
                     }
                 }
                 else if (op == "beq" || op == "bne" || op == "bltz" || op == "blez" || op == "bgtz" || op == "bgez") {
                     if (this.labels[label] !== undefined) {
-                        tokens[tokens.length-1] = this.labels[label] - i;
+                        tokens[tokens.length-1] = this.labels[label] - (i + 4);
                     }
                     else {
+                        this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
                         tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to branch very far to the end
                     }
                 }
@@ -230,8 +233,9 @@ class Program {
     j(target) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delayslot = true;
+            var newpc = (this.pc & 0xf0000000) + (target << 2); // pc already points to instruction in delay slot
             this.step();
-            this.pc = (this.pc & 0xf0000000) + (target << 2); // pc was incremented by 4 twice, once before the jump instruction in step() and another in the above call to step()
+            this.pc = newpc;
             this.delaySlot = false;
         }
     }
@@ -263,9 +267,10 @@ class Program {
         offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
             this.step();
             if (this.registers[rs] == this.registers[rt]) {
-                this.pc = this.pc + (offset << 2);
+                this.pc = newpc;
             }
             this.delaySlot = false;
         }
@@ -275,9 +280,10 @@ class Program {
         offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
             this.step();
             if (this.registers[rs] != this.registers[rt]) {
-                this.pc = this.pc + (offset << 2);
+                this.pc = newpc;
             }
             this.delaySlot = false;
         }
@@ -287,9 +293,10 @@ class Program {
         offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
             this.step();
             if (this.registers[rs] < 0) {
-                this.pc = this.pc + (offset << 2);
+                this.pc = newpc;
             }
             this.delaySlot = false;
         }
@@ -299,9 +306,10 @@ class Program {
         offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
             this.step();
             if (this.registers[rs] <= 0) {
-                this.pc = this.pc + (offset << 2);
+                this.pc = newpc;
             }
             this.delaySlot = false;
         }
@@ -311,9 +319,10 @@ class Program {
         offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
             this.step();
             if (this.registers[rs] > 0) {
-                this.pc = this.pc + (offset << 2);
+                this.pc = newpc;
             }
             this.delaySlot = false;
         }
@@ -323,9 +332,10 @@ class Program {
         offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
             this.step();
             if (this.registers[rs] >= 0) {
-                this.pc = this.pc + (offset << 2);
+                this.pc = newpc;
             }
             this.delaySlot = false;
         }
@@ -494,6 +504,7 @@ class Program {
     }
 
     step() {
+        console.log(this.insns[this.pc / 4]);
         var insn = this.insns[this.pc / 4][0];
         this.line = this.insns[this.pc / 4][1];
         this.pc += 4;
