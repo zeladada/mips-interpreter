@@ -39,14 +39,28 @@
                 <br>
                 <div id="current-instruction" class="well">The most recent instruction will be shown here when stepping.</div>
                 <hr>
-                <p><strong>NEW!</strong> Set a breakpoint by clicking on the line number.</p>
-                <p>Operands supported:<br>
-                    <code>ADDIU</code>, <code>ANDI</code>, <code>ORI</code>, <code>XORI</code>, <code>SLTI</code>, <code>SLTIU</code>, <code>ADDU</code>, <code>SUBU</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>NOR</code>, <code>SLT</code>, <code>SLTU</code>, <code>MOVN</code>, <code>MOVZ</code>, <code>SLL</code>, <code>SRL</code>, <code>SRA</code>, <code>SLLV</code>, <code>SRLV</code>, <code>SRAV</code>, <code>LUI</code>
-                </p>
+                <h4>Features</h4>
+                <ul>
+                    <li><em>Reset</em> to load the code, <em>Step</em> one instruction, or <em>Run</em> all instructions</li>
+                    <li>Set a breakpoint by clicking on the line number (only for <em>Run</em>)</li>
+                    <li>View <a href="#register-table">registers</a> on the right, <a href="#memory-table">memory</a> on the bottom of this page</li>
+                    <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
+                    <li>API access from javascript console (see <code>globalP</code> variable)</li>
+                </ul>
+                <h4>Supported Instructions</h4>
+                <ul>
+                    <li>Immediate Arithmetic: <code>ADDIU</code>, <code>ANDI</code>, <code>ORI</code>, <code>XORI</code>, <code>SLTI</code>, <code>SLTIU</code></li>
+                    <li>Register Arithmetic: <code>ADDU</code>, <code>SUBU</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>NOR</code>, <code>SLT</code>, <code>SLTU</code></li>
+                    <li>Move: <code>MOVN</code>, <code>MOVZ</code></li>
+                    <li>Shifts: <code>SLL</code>, <code>SRL</code>, <code>SRA</code>, <code>SLLV</code>, <code>SRLV</code>, <code>SRAV</code></li>
+                    <li>Immediate Load: <code>LUI</code></li>
+                    <li>Control: <code>J</code>, <code>JR</code>, <code>JAL</code>, <code>JALR</code>, <code>BEQ</code>, <code>BNE</code>, <code>BLEZ</code>, <code>BGTZ</code>, <code>BLTZ</code>, <code>BGEZ</code></li>
+                    <li>Memory: <code>LW</code>, <code>LB</code>, <code>LBU</code>, <code>SW</code>, <code>SB</code></li>
+                </ul>
                 <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
             </div>
             <div class="col-md-6">
-                <div class="table-responsive">
+                <div id="register-table" class="table-responsive">
                     <table class="table table-hover table-condensed">
                         <thead>
                             <th>Register</th>
