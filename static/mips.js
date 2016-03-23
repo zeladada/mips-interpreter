@@ -23,7 +23,7 @@ class Program {
                 if (this.labels[label] !== undefined) {
                     this.pushError("Found multiple instances of label: " + label);
                 }
-                this.labels[label] = i + 2; // make label point to the line after it (also zero-index -> one-index)
+                this.labels[label] = (i + 2) * 4; // make label point to the line after it (also zero-index -> one-index)
                 this.insns[i] = ""; // remove label so that it does not affect running
             }
         }
@@ -60,13 +60,13 @@ class Program {
         return imm;
     }
 
-    /** Verifies that there is not another delay slot in progress */
+    /** Verifies that there is another delay slot in progress */
     verifyDelaySlot() {
         if (this.delaySlot) {
-            this.pushError("Cannot have a jump/branch instruction following jump/branch! [line " + this.line + "]");
-            return false;
+            this.pushError("Cannot have a jump/branch instruction in delay slot! [line " + this.line + "]. Ignoring jump/branch in delay slot.");
+            return true;
         }
-        return true;
+        return false;
     }
 
     /** Verifies a memory range from loc1 - loc2 */
@@ -193,7 +193,9 @@ class Program {
     }
 
     jal(target) {
-        this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
+            this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        }
         this.j(target);
     }
 
@@ -207,8 +209,76 @@ class Program {
     }
 
     jalr(target) {
-        this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
+            this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        }
         this.jr(target);
+    }
+
+    beq(rs, rt, offset) {
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            this.step();
+            if (this.registers[rs] == this.registers[rt]) {
+                this.pc = this.pc + (offset << 2);
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bne(rs, rt, offset) {
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            this.step();
+            if (this.registers[rs] != this.registers[rt]) {
+                this.pc = this.pc + (offset << 2);
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bltz(rs, offset) {
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            this.step();
+            if (this.registers[rs] < 0) {
+                this.pc = this.pc + (offset << 2);
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    blez(rs, offset) {
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            this.step();
+            if (this.registers[rs] <= 0) {
+                this.pc = this.pc + (offset << 2);
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bgtz(rs, offset) {
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            this.step();
+            if (this.registers[rs] > 0) {
+                this.pc = this.pc + (offset << 2);
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bgez(rs, offset) {
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            this.step();
+            if (this.registers[rs] >= 0) {
+                this.pc = this.pc + (offset << 2);
+            }
+            this.delaySlot = false;
+        }
     }
 
     lw(rt, offset, base) {
@@ -487,6 +557,24 @@ class Program {
                     break;
                 case "jalr":
                     this.jalr(tokens[0]);
+                    break;
+                case "beq":
+                    this.beq(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "bne":
+                    this.bne(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "bltz":
+                    this.bltz(tokens[0], tokens[1]);
+                    break;
+                case "blez":
+                    this.blez(tokens[0], tokens[1]);
+                    break;
+                case "bgtz":
+                    this.bgtz(tokens[0], tokens[1]);
+                    break;
+                case "bgez":
+                    this.bgez(tokens[0], tokens[1]);
                     break;
                 case "lw":
                     this.lw(tokens[0], tokens[1], tokens[2]);
