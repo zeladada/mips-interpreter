@@ -60,6 +60,15 @@ class Program {
         return imm;
     }
 
+    /** Verifies that there is not another delay slot in progress */
+    verifyDelaySlot() {
+        if (this.delaySlot) {
+            this.pushError("Cannot have a jump/branch instruction following jump/branch! [line " + this.line + "]");
+            return false;
+        }
+        return true;
+    }
+
     /** Verifies a memory range from loc1 - loc2 */
     verifyMemory(loc1, loc2) {
         if (loc1 < 0 || loc1 >= 0xfffffff + 1 || loc2 < 0 || loc2 >= 0xfffffff + 1) {
@@ -172,6 +181,34 @@ class Program {
     lui(rt, imm) {
         imm = this.normalizeImm(imm);
         this.registers[rt] = imm << 16;
+    }
+
+    j(target) {
+        if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
+            this.delayslot = true;
+            this.step();
+            this.pc = (this.pc & 0xf0000000) + (target << 2); // pc was incremented by 4 twice, once before the jump instruction in step() and another in the above call to step()
+            this.delaySlot = false;
+        }
+    }
+
+    jal(target) {
+        this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        this.j(target);
+    }
+
+    jr(rs) {
+        if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
+            this.delayslot = true;
+            this.step();
+            this.pc = this.registers[rs]; // pc was incremented by 4 twice, once before the jump instruction in step() and another in the above call to step()
+            this.delaySlot = false;
+        }
+    }
+
+    jalr(target) {
+        this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        this.jr(target);
     }
 
     lw(rt, offset, base) {
@@ -327,6 +364,9 @@ class Program {
         else {
             value = parseInt(tok);
             if (isNaN(value)) {
+                value = this.labels[tok];
+            }
+            if (value === undefined) {
                 this.pushError("Unknown value [line " + this.line + "]: " + tok);
             }
         }
@@ -435,6 +475,18 @@ class Program {
                     break;
                 case "lui":
                     this.lui(tokens[0], tokens[1]);
+                    break;
+                case "j":
+                    this.j(tokens[0]);
+                    break;
+                case "jr":
+                    this.jr(tokens[0]);
+                    break;
+                case "jal":
+                    this.jal(tokens[0]);
+                    break;
+                case "jalr":
+                    this.jalr(tokens[0]);
                     break;
                 case "lw":
                     this.lw(tokens[0], tokens[1], tokens[2]);
