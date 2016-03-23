@@ -20,20 +20,21 @@ class Program {
         var filteredInstructions = [];
         var filteredIndex = 0;
         for (var i = 0; i < this.insns.length; ++i) {
+            var lineNo = i + 1;
             var insn = this.insns[i];
             if (insn.charAt(insn.length-1) == ':') { // encounter a label which ends with a colon
                 var label = insn.substring(0, insn.length-1);
                 if (this.labels[label] !== undefined) {
-                    this.pushError("Found multiple instances of label: " + label + " [line " + i + "]");
+                    this.pushError("Found multiple instances of label: " + label + " [line " + lineNo + "]");
                 }
-                if (/(d+)/.test(label)) {
-                    this.pushError("Cannot use numbers in label name: " + label + " [line " + i + "]");
+                if (/(\d+)/.test(label)) {
+                    this.pushError("Cannot use numbers in label name: " + label + " [line " + lineNo + "]");
                     continue;
                 }
                 this.labels[label] = filteredIndex; // make label point to the line after it (also zero-index -> one-index)
             }
             else if (insn != '' && insn.charAt(0) != '#') { // ignore empty/comment lines
-                filteredInstructions.push([insn, i + 1]); // push instruction and line number for debugging purposes
+                filteredInstructions.push([insn, lineNo]); // push instruction and line number for debugging purposes
                 filteredIndex++;
             }
         }
@@ -256,7 +257,7 @@ class Program {
     }
 
     beq(rs, rt, offset) {
-        offset = immPad(offset);
+        offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -268,7 +269,7 @@ class Program {
     }
 
     bne(rs, rt, offset) {
-        offset = immPad(offset);
+        offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -280,7 +281,7 @@ class Program {
     }
 
     bltz(rs, offset) {
-        offset = immPad(offset);
+        offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -292,7 +293,7 @@ class Program {
     }
 
     blez(rs, offset) {
-        offset = immPad(offset);
+        offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -304,7 +305,7 @@ class Program {
     }
 
     bgtz(rs, offset) {
-        offset = immPad(offset);
+        offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
@@ -316,7 +317,7 @@ class Program {
     }
 
     bgez(rs, offset) {
-        offset = immPad(offset);
+        offset = this.immPad(offset);
         if (!this.verifyDelaySlot()) {
             this.delaySlot = true;
             this.step();
