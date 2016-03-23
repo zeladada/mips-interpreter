@@ -93,6 +93,7 @@
     </script>
     <script>
         "use strict";
+        var globalP = undefined;
         document.getElementById('eval').addEventListener('click', function() {
             clearAlerts(); // Clear any previous warnings/errors
             var code = document.getElementById('code').value;
@@ -111,6 +112,7 @@
             }
             displayRegisters(p);
             displayErrors(p);
+            globalP = p;
         });
 
         function getRegisterSyntacticSugar(registerNo) {
