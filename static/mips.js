@@ -84,6 +84,10 @@ class Program {
         return registerCopy;
     }
 
+    getMemory() {
+        return this.memory;
+    }
+
     getErrors() {
         return this.errors;
     }
@@ -95,7 +99,7 @@ class Program {
 
     normalizeImm(imm) {
         if (imm > 0xffff) {
-            this.pushError("Immediate more than 16 bits [line " + this.line + "]: " + imm);
+            this.pushError("Immediate is more than 16 bits [line " + this.line + "]: " + imm);
         }
         return imm & 0xffff;
     }

@@ -7,18 +7,6 @@ textarea {
     width: 100%;
 }
 
-#registers {
-    font-family: monospace;
-    font-size: 11px;
-}
-
-#registers td {
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 0px;
-    padding-right: 0px;
-}
-
 #errors {
     font-family: monospace;
 }
@@ -27,3 +15,22 @@ textarea {
     font-family: monospace;
     font-size: 12px;
 }
+
+#registers,
+#memory {
+    font-family: monospace;
+    font-size: 11px;
+}
+
+#registers td,
+#memory td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+#memory-table {
+    max-height: 500px;
+}
+

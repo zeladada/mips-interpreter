@@ -45,7 +45,6 @@
                     <li>Set a breakpoint by clicking on the line number (only for <em>Run</em>)</li>
                     <li>View <a href="#register-table">registers</a> on the right, <a href="#memory-table">memory</a> on the bottom of this page</li>
                     <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
-                    <li>API access from javascript console (see <code>globalP</code> variable)</li>
                 </ul>
                 <h4>Supported Instructions</h4>
                 <ul>
@@ -106,6 +105,36 @@
                 </div>
             </div>
         </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-inline text-center">
+                    <div class="form-group">
+                        <label for="memory-address">Memory Address</label>
+                        <input type="text" id="memory-address" class="form-control" placeholder="0x00000000">
+                    </div>
+                    <button id="memory-go" class="btn btn-primary">Go</button>
+                </div>
+                <br>
+                <div id="memory-table" class="table-responsive">
+                    <table class="table table-hover table-condensed">
+                        <thead>
+                            <th>Memory Address</th>
+                            <th>Decimal</th>
+                            <th>Hex</th>
+                            <th>Binary</th>
+                        </thead>
+                        <tbody id="memory">
+                            <tr><td>0x00000000</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td>0x00000004</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td>0x00000008</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td>0x0000000c</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td>0x00000010</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="static/jquery.min.js"></script>
     <script src="static/sprintf.min.js"></script>
@@ -130,6 +159,7 @@
             var p = new Program(code);
             globalP = p;
             displayRegisters();
+            displayMemory();
             displayErrors();
         }
 
@@ -147,6 +177,7 @@
                 document.getElementById('current-instruction').innerHTML = "[line " + currentInsn[1] + "]: " + currentInsn[0];
                 globalP.step();
                 displayRegisters();
+                displayMemory();
                 displayErrors();
             }
             else {
@@ -172,8 +203,55 @@
                 globalP.run();
             }
             displayRegisters();
+            displayMemory();
             displayErrors();
         });
+
+        document.getElementById('memory-go').addEventListener('click', displayMemory);
+
+        function displayRegisters() {
+            var registers = globalP.getRegisters();
+            var registersHTML = "";
+            for (var i = 0; i < 32; ++i) {
+                registersHTML += sprintf("<tr><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
+                    i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
+            }
+            document.getElementById('registers').innerHTML = registersHTML;
+        }
+
+        function displayMemory() {
+            var memory = globalP.getMemory();
+            var memoryHTML = "";
+            var addr = parseInt(document.getElementById('memory-address').value) || 0;
+            addr -= (addr % 4); // keep memory locations as multiples of 4
+            var start = Math.max(addr - 20, 0);
+            var end = Math.min(addr + 20, memory.length);
+            for (var i = start; i < end; i += 4) {
+                var lsb = memory[i];
+                var byte2 = memory[i+1] << 8;
+                var byte3 = memory[i+2] << 16;
+                var msb = memory[i+3] << 24;
+                var memValue = msb + byte3 + byte2 + lsb;
+                memoryHTML += sprintf("<tr><td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
+                    i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
+            }
+            document.getElementById('memory').innerHTML = memoryHTML;
+        }
+
+        function displayErrors() {
+            var errors = globalP.getErrors();
+            if (errors.length > 0) {
+                document.getElementById('errors').innerHTML = errors.join('<br>');
+                document.getElementById('errors-container').style.display = "block";
+            }
+        }
+
+        function clearAlerts() {
+            document.getElementById('warnings-container').innerHTML = '';
+            document.getElementById('warnings-container').style.display = "none";
+            document.getElementById('errors').innerHTML = '';
+            document.getElementById('errors-container').style.display = "none";
+        }
 
         function getRegisterSyntacticSugar(registerNo) {
             switch(registerNo) {
@@ -245,31 +323,6 @@
                     console.log("Bad register number:  " + registerNo);
             }
             return undefined; // no syntactic sugar
-        }
-
-        function displayRegisters() {
-            var registers = globalP.getRegisters();
-            var registersHTML = "";
-            for (var i = 0; i < 32; ++i) {
-                registersHTML += sprintf("<tr><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
-                    i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
-            }
-            document.getElementById('registers').innerHTML = registersHTML;
-        }
-
-        function displayErrors() {
-            var errors = globalP.getErrors();
-            if (errors.length > 0) {
-                document.getElementById('errors').innerHTML = errors.join('<br>');
-                document.getElementById('errors-container').style.display = "block";
-            }
-        }
-
-        function clearAlerts() {
-            document.getElementById('warnings-container').innerHTML = '';
-            document.getElementById('warnings-container').style.display = "none";
-            document.getElementById('errors').innerHTML = '';
-            document.getElementById('errors-container').style.display = "none";
         }
     </script>
 </body>
