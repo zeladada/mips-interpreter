@@ -644,10 +644,14 @@ class Program {
                 this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
             }
         }
+        console.log(this.registers[4]);
     }
 
     runUntil(line) {
-        while((this.pc / 4) != line && (this.pc / 4) < this.insns.length) {
+        while ((this.pc / 4) < this.insns.length) {
+            if (this.insns[this.pc / 4][1] == line) {
+                break;
+            }
             this.step();
         }
     }
