@@ -37,7 +37,7 @@
                     </div>
                 </div>
                 <br>
-                <div id="current-instruction" class="well">The current instruction being run will be shown here when stepping.</div>
+                <div id="current-instruction" class="well">The most recent instruction will be shown here when stepping.</div>
                 <hr>
                 <p><strong>NEW!</strong> Set a breakpoint by clicking on the line number.</p>
                 <p>Operands supported:<br>
@@ -119,7 +119,10 @@
             displayErrors();
         }
 
-        document.getElementById('reset').addEventListener('click', setup);
+        document.getElementById('reset').addEventListener('click', function() {
+            setup();
+            document.getElementById('current-instruction').innerHTML = "The most recent instruction will be shown here when stepping."
+        });
 
         document.getElementById('step').addEventListener('click', function() {
             if (globalP === undefined) {
@@ -134,7 +137,7 @@
                 displayErrors();
             }
             else {
-                document.getElementById('current-instruction').innerHTML = "No more instructions to run!";
+                document.getElementById('current-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
             }
         });
 
