@@ -22,3 +22,8 @@ textarea {
 #errors {
     font-family: monospace;
 }
+
+#current-instruction {
+    font-family: monospace;
+    font-size: 12px;
+}

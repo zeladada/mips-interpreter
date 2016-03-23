@@ -25,7 +25,19 @@
                 <div class="form-group">
                     <textarea id="code" rows="15" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
                 </div>
-                <button id="eval" class="btn btn-primary btn-block">Evaluate</button>
+                <div class="btn-group btn-group-justified" role="group">
+                    <div class="btn-group">
+                        <button id="reset" class="btn btn-primary">Reset</button>
+                    </div>
+                    <div class="btn-group">
+                        <button id="step" class="btn btn-warning">Step</button>
+                    </div>
+                    <div class="btn-group">
+                        <button id="run" class="btn btn-success">Run</button>
+                    </div>
+                </div>
+                <br>
+                <div id="current-instruction" class="well">The current instruction being run will be shown here when stepping.</div>
                 <hr>
                 <p><strong>NEW!</strong> Set a breakpoint by clicking on the line number.</p>
                 <p>Operands supported:<br>
@@ -94,25 +106,54 @@
     <script>
         "use strict";
         var globalP = undefined;
-        document.getElementById('eval').addEventListener('click', function() {
+
+        function setup() {
             clearAlerts(); // Clear any previous warnings/errors
             var code = document.getElementById('code').value;
             var p = new Program(code);
+            globalP = p;
+            displayRegisters();
+            displayErrors();
+        }
+
+        document.getElementById('reset').addEventListener('click', setup);
+
+        document.getElementById('step').addEventListener('click', function() {
+            if (globalP === undefined) {
+                setup();
+            }
+            console.log(globalP.insn);
+            if (globalP.pc / 4 < globalP.insns.length) {
+                var currentInsn = globalP.insns[globalP.pc / 4];
+                document.getElementById('current-instruction').innerHTML = "[line " + currentInsn[1] + "]: " + currentInsn[0];
+                globalP.step();
+                displayRegisters();
+                displayErrors();
+            }
+            else {
+                document.getElementById('current-instruction').innerHTML = "No more instructions to run!";
+            }
+        });
+
+        document.getElementById('run').addEventListener('click', function() {
+            if (globalP === undefined) {
+                setup();
+            }
             var breakpoints = document.getElementsByClassName('lineselect');
             if (breakpoints.length > 0) { // there is a breakpoint
                 var breakline = parseInt(breakpoints[0].innerHTML);
-                p.runUntil(breakline);
-                if (breakline <= p.insns.length) {
+                globalP.runUntil(breakline);
+                if (breakline <= globalP.insns.length) {
                     document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + breakline + ". Breakpoint!";
                     document.getElementById('warnings-container').style.display = "block";
                 }
+                else{}
             }
             else { // no breakpoint selected
-                p.run();
+                globalP.run();
             }
-            displayRegisters(p);
-            displayErrors(p);
-            globalP = p;
+            displayRegisters();
+            displayErrors();
         });
 
         function getRegisterSyntacticSugar(registerNo) {
@@ -187,8 +228,8 @@
             return undefined; // no syntactic sugar
         }
 
-        function displayRegisters(prog) {
-            var registers = prog.getRegisters();
+        function displayRegisters() {
+            var registers = globalP.getRegisters();
             var registersHTML = "";
             for (var i = 0; i < 32; ++i) {
                 registersHTML += sprintf("<tr><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
@@ -197,8 +238,8 @@
             document.getElementById('registers').innerHTML = registersHTML;
         }
 
-        function displayErrors(prog) {
-            var errors = prog.getErrors();
+        function displayErrors() {
+            var errors = globalP.getErrors();
             if (errors.length > 0) {
                 document.getElementById('errors').innerHTML = errors.join('<br>');
                 document.getElementById('errors-container').style.display = "block";
