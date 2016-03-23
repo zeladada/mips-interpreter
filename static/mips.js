@@ -504,7 +504,10 @@ class Program {
     }
 
     step() {
-        console.log(this.insns[this.pc / 4]);
+        if (this.pc / 4 >= this.insns.length) {
+            console.log("PC is invalid!!");
+            return;
+        }
         var insn = this.insns[this.pc / 4][0];
         this.line = this.insns[this.pc / 4][1];
         this.pc += 4;
@@ -655,7 +658,6 @@ class Program {
                 this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
             }
         }
-        console.log(this.registers[4]);
     }
 
     runUntil(line) {
