@@ -6,7 +6,7 @@ class Program {
         this.pc = 0x0;
         this.line = 0;
         this.registers = new Int32Array(32);
-        this.memory = new Int32Array((0xffffff + 1) / 4); // Creates a memory array addressable by 24-bit addresses = 64 MB
+        this.memory = new Uint8Array(0xffffff + 1); // Creates a memory array addressable by 24-bit addresses = 64 MB
         this.insns = instructions.split('\n').map(function(insn) {
             return insn.trim();
         });
@@ -54,10 +54,16 @@ class Program {
     }
 
     immPad(imm) {
-        if ((imm & 0x8000) == 0x8000) {
+        if ((imm & 0x8000) == 0x8000) { // sign extend
             imm |= 0xffff0000;
         }
         return imm;
+    }
+
+    verifyMemory(loc) {
+        if (loc < 0 || loc >= 0xfffffff + 1) {
+            this.pushError("Invalid memory location [line " + this.line + "]: " + loc);
+        }
     }
 
     addiu(rt, rs, imm) {
@@ -164,6 +170,50 @@ class Program {
     lui(rt, imm) {
         imm = this.normalizeImm(imm);
         this.registers[rt] = imm << 16;
+    }
+
+    lw(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        this.verifyMemory(loc + 3);
+        var lsb = this.memory[loc];
+        var byte2 = this.memory[loc+1] << 8;
+        var byte3 = this.memory[loc+2] << 16;
+        var msb = this.memory[loc+3] << 24;
+        this.registers[rt] = msb + byte3 + byte2 + lsb;
+    }
+
+    lb(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        var byteValue = this.memory[loc];
+        if (byteValue & 0x80 == 0x80) { // sign extend
+            byteValue |= 0xffffff00;
+        }
+        this.registers[rt] = byteValue;
+    }
+
+    lbu(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        this.registers[rt] = this.memory[loc];
+    }
+
+    sw(rt, offset, base) {
+        var registerValue = this.registers[rt];
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        this.verifyMemory(loc + 3);
+        this.memory[loc] = registerValue & 0xffffff00;
+        this.memory[loc+1] = (registerValue >>> 8) & 0xffffff00;
+        this.memory[loc+2] = (registerValue >>> 16) & 0xffffff00;
+        this.memory[loc+3] = (registerValue >>> 24) & 0xffffff00;
+    }
+
+    sb(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        this.memory[loc] = this.registers[rt] & 0xffffff00;
     }
 
     parseRegister(tok) {
@@ -291,16 +341,23 @@ class Program {
             var op = insn.substring(0, insn.indexOf(' '));
             var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
             var tokens = [];
+            var tokensIndex = 0;
             for (var i = 0; i < stringTokens.length; ++i) {
                 var trimmed = stringTokens[i].trim();
                 if (trimmed.indexOf('#') != -1) { // remove end of line comments
                     trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
-                    tokens[i] = this.parseToken(trimmed);
+                    tokens[tokensIndex] = this.parseToken(trimmed);
                     break;
                 }
-                else {
-                    tokens[i] = this.parseToken(trimmed);
+                else if (trimmed.indexOf('(') != -1 && trimmed.indexOf(')') != -1) { // location of memory for load/store operations: offset($register)
+                    tokens[tokensIndex] = this.parseToken(trimmed.substring(0, trimmed.indexOf('('))); // parse the offset
+                    tokensIndex++;
+                    tokens[tokensIndex] = this.parseToken(trimmed.substring(trimmed.indexOf('(')+1, trimmed.indexOf(')'))); // parse the register
                 }
+                else { // parses a single register or immediate value
+                    tokens[tokensIndex] = this.parseToken(trimmed);
+                }
+                tokensIndex++;
             }
             switch(op.toLowerCase()) {
                 case "addiu":
@@ -371,6 +428,21 @@ class Program {
                     break;
                 case "lui":
                     this.lui(tokens[0], tokens[1]);
+                    break;
+                case "lw":
+                    this.lw(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "lb":
+                    this.lb(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "lbu":
+                    this.lbu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sw":
+                    this.sw(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sb":
+                    this.sb(tokens[0], tokens[1], tokens[2]);
                     break;
                 default:
                     this.pushError("Unsupported Op [line " + this.line +"]: " + op);
