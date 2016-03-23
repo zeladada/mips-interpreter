@@ -102,6 +102,9 @@
         $('.codelines').on('click', '.lineno', function() {
             $(this).toggleClass('lineselect');
         });
+        $('#code').bind('input propertychange', function() { // if the MIPS code changes, invalidate the current program instance
+            globalP = undefined;
+        });
     </script>
     <script>
         "use strict";
