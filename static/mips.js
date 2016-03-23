@@ -2,13 +2,78 @@
 class Program {
 
     constructor(instructions) {
-        this.pc = 0x0 | 0;
+        this.errors = [];
+        this.pc = 0x0;
         this.line = 0;
         this.registers = new Int32Array(32);
-        this.insns = instructions.split("\n").map(function(insn) {
+        this.memory = new Uint8Array(0xffffff + 1); // Creates a memory array addressable by 24-bit addresses = 64 MB
+        this.insns = instructions.split('\n').map(function(insn) {
             return insn.trim();
         });
-        this.errors = [];
+        this.labels = {};
+        this.generateLabels();
+        this.linkLabels();
+    }
+
+    /** Goes through all the lines and finds the labels and associates pc addresses to them */
+    generateLabels() {
+        var filteredInstructions = [];
+        var filteredIndex = 0;
+        for (var i = 0; i < this.insns.length; ++i) {
+            var lineNo = i + 1;
+            var insn = this.insns[i];
+            if (insn.indexOf('#') != -1) { // remove everything after a comment
+                insn = insn.substring(0, insn.indexOf('#')).trim();
+            }
+            if (insn.charAt(insn.length-1) == ':') { // encounter a label which ends with a colon
+                var label = insn.substring(0, insn.length-1);
+                if (this.labels[label] !== undefined) {
+                    this.pushError("Found multiple instances of label: " + label + " [line " + lineNo + "]");
+                }
+                if (/(\d+)/.test(label)) {
+                    this.pushError("Cannot use numbers in label name: " + label + " [line " + lineNo + "]");
+                    continue;
+                }
+                this.labels[label] = filteredIndex; // make label point to the line after it (also zero-index -> one-index)
+            }
+            else if (insn != '') { // ignore empty/comment lines
+                filteredInstructions.push([insn, lineNo]); // push instruction and line number for debugging purposes
+                filteredIndex++;
+            }
+        }
+        this.insns = filteredInstructions;
+    }
+
+    /** Converts labels to memory locations */
+    linkLabels() {
+        for (var i = 0; i < this.insns.length; ++i) {
+            var insn = this.insns[i][0];
+            var lineNo = this.insns[i][1];
+            if (insn.indexOf(' ') != -1) { // ignore changing labels of bad instructions
+                var op = insn.substring(0, insn.indexOf(' ')).toLowerCase();
+                var tokens = insn.substring(insn.indexOf(' '), insn.length).split(',');
+                var label = tokens[tokens.length-1].trim(); // label comes at the very end
+                if (op == "j" || op == "jal") {
+                    if (this.labels[label] !== undefined) {
+                        tokens[tokens.length-1] = this.labels[label]; // absolute jump to the label location
+                    }
+                    else {
+                        this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
+                        tokens[tokens.length-1] = 0x3ffffff; // most likely a label issue, so we want it to jump very far to the end
+                    }
+                }
+                else if (op == "beq" || op == "bne" || op == "bltz" || op == "blez" || op == "bgtz" || op == "bgez") {
+                    if (this.labels[label] !== undefined) {
+                        tokens[tokens.length-1] = this.labels[label] - (i + 1); // branch offset relative to delay slot instruction
+                    }
+                    else {
+                        this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
+                        tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to branch very far to the end
+                    }
+                }
+                this.insns[i][0] = op + " " + tokens.join(', '); // instruction with labels replaced
+            }
+        }
     }
 
     getRegisters() {
@@ -17,6 +82,10 @@ class Program {
             registerCopy.push(this.registers[i]);
         }
         return registerCopy;
+    }
+
+    getMemory() {
+        return this.memory;
     }
 
     getErrors() {
@@ -30,16 +99,33 @@ class Program {
 
     normalizeImm(imm) {
         if (imm > 0xffff) {
-            this.pushError("Immediate more than 16 bits [line " + this.line + "]: " + imm);
+            this.pushError("Immediate is more than 16 bits [line " + this.line + "]: " + imm);
         }
         return imm & 0xffff;
     }
 
     immPad(imm) {
-        if ((imm & 0x8000) == 0x8000) {
+        if ((imm & 0x8000) == 0x8000) { // sign extend
             imm |= 0xffff0000;
         }
         return imm;
+    }
+
+    /** Verifies that there is another delay slot in progress */
+    verifyDelaySlot() {
+        if (this.delaySlot) {
+            this.pushError("Cannot have a jump/branch instruction in delay slot! [line " + this.line + "]. Ignoring jump/branch in delay slot.");
+            return true;
+        }
+        return false;
+    }
+
+    /** Verifies a memory range from loc1 - loc2 */
+    verifyMemory(loc1, loc2) {
+        if (loc1 < 0 || loc1 >= 0xfffffff + 1 || loc2 < 0 || loc2 >= 0xfffffff + 1) {
+            this.pushError("Invalid memory location [line " + this.line + "]: " + loc1 +
+                    ((loc2 === undefined) ? "" : " to " + loc2));
+        }
     }
 
     addiu(rt, rs, imm) {
@@ -148,6 +234,159 @@ class Program {
         this.registers[rt] = imm << 16;
     }
 
+    j(target) {
+        if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
+            this.delayslot = true;
+            var newpc = (this.pc & 0xf0000000) + (target << 2); // pc already points to instruction in delay slot
+            this.step();
+            this.pc = newpc;
+            this.delaySlot = false;
+        }
+    }
+
+    jal(target) {
+        if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
+            this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        }
+        this.j(target);
+    }
+
+    jr(rs) {
+        if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
+            this.delayslot = true;
+            this.step();
+            this.pc = this.registers[rs]; // pc was incremented by 4 twice, once before the jump instruction in step() and another in the above call to step()
+            this.delaySlot = false;
+        }
+    }
+
+    jalr(target) {
+        if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
+            this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+        }
+        this.jr(target);
+    }
+
+    beq(rs, rt, offset) {
+        offset = this.immPad(offset);
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
+            this.step();
+            if (this.registers[rs] == this.registers[rt]) {
+                this.pc = newpc;
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bne(rs, rt, offset) {
+        offset = this.immPad(offset);
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
+            this.step();
+            if (this.registers[rs] != this.registers[rt]) {
+                this.pc = newpc;
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bltz(rs, offset) {
+        offset = this.immPad(offset);
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
+            this.step();
+            if (this.registers[rs] < 0) {
+                this.pc = newpc;
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    blez(rs, offset) {
+        offset = this.immPad(offset);
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
+            this.step();
+            if (this.registers[rs] <= 0) {
+                this.pc = newpc;
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bgtz(rs, offset) {
+        offset = this.immPad(offset);
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
+            this.step();
+            if (this.registers[rs] > 0) {
+                this.pc = newpc;
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    bgez(rs, offset) {
+        offset = this.immPad(offset);
+        if (!this.verifyDelaySlot()) {
+            this.delaySlot = true;
+            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
+            this.step();
+            if (this.registers[rs] >= 0) {
+                this.pc = newpc;
+            }
+            this.delaySlot = false;
+        }
+    }
+
+    lw(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc, loc+3);
+        var lsb = this.memory[loc];
+        var byte2 = this.memory[loc+1] << 8;
+        var byte3 = this.memory[loc+2] << 16;
+        var msb = this.memory[loc+3] << 24;
+        this.registers[rt] = msb + byte3 + byte2 + lsb;
+    }
+
+    lb(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        var byteValue = this.memory[loc];
+        if (byteValue & 0x80 == 0x80) { // sign extend
+            byteValue |= 0xffffff00;
+        }
+        this.registers[rt] = byteValue;
+    }
+
+    lbu(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        this.registers[rt] = this.memory[loc];
+    }
+
+    sw(rt, offset, base) {
+        var registerValue = this.registers[rt];
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc, loc+3);
+        this.memory[loc] = registerValue & 0x000000ff;
+        this.memory[loc+1] = (registerValue >>> 8) & 0x000000ff;
+        this.memory[loc+2] = (registerValue >>> 16) & 0x000000ff;
+        this.memory[loc+3] = (registerValue >>> 24) & 0x000000ff;
+    }
+
+    sb(rt, offset, base) {
+        var loc = offset + this.registers[base];
+        this.verifyMemory(loc);
+        this.memory[loc] = this.registers[rt] & 0x000000ff;
+    }
+
     parseRegister(tok) {
         switch(tok) {
             case "$zero":
@@ -251,27 +490,52 @@ class Program {
         return undefined; // invalid register
     }
 
+    parseToken(tok) {
+        var value;
+        if (tok.charAt(0) == '$') {
+            value = this.parseRegister(tok);
+        }
+        else {
+            value = parseInt(tok);
+            if (isNaN(value)) {
+                value = this.labels[tok];
+            }
+            if (value === undefined) {
+                this.pushError("Unknown value [line " + this.line + "]: " + tok);
+            }
+        }
+        return value;
+    }
+
     step() {
-        this.line = this.pc / 4 + 1;
-        var insn = this.insns[this.pc / 4];
+        if (this.pc / 4 >= this.insns.length) {
+            console.log("PC is invalid!!");
+            return;
+        }
+        var insn = this.insns[this.pc / 4][0];
+        this.line = this.insns[this.pc / 4][1];
         this.pc += 4;
-        if (insn.indexOf(' ') != -1 && insn.charAt(0) != '#') {
+        if (insn.indexOf(' ') != -1) { // if not bad format, since all instructions have a space after the op
             var op = insn.substring(0, insn.indexOf(' '));
             var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
             var tokens = [];
+            var tokensIndex = 0;
             for (var i = 0; i < stringTokens.length; ++i) {
                 var trimmed = stringTokens[i].trim();
-                if (trimmed.indexOf('#') != -1) { // remove comments
+                if (trimmed.indexOf('#') != -1) { // remove end of line comments
                     trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
+                    tokens[tokensIndex] = this.parseToken(trimmed);
+                    break;
                 }
-                var tok = parseInt(trimmed);
-                if (isNaN(tok)) { // attempts to parse register
-                    tok = this.parseRegister(trimmed);
+                else if (trimmed.indexOf('(') != -1 && trimmed.indexOf(')') != -1) { // location of memory for load/store operations: offset($register)
+                    tokens[tokensIndex] = this.parseToken(trimmed.substring(0, trimmed.indexOf('('))); // parse the offset
+                    tokensIndex++;
+                    tokens[tokensIndex] = this.parseToken(trimmed.substring(trimmed.indexOf('(')+1, trimmed.indexOf(')'))); // parse the register
                 }
-                if (isNaN(tok)) { // definitely not a number
-                    this.pushError("Unknown value [line " + this.line + "]: " + trimmed);
+                else { // parses a single register or immediate value
+                    tokens[tokensIndex] = this.parseToken(trimmed);
                 }
-                tokens[i] = tok;
+                tokensIndex++;
             }
             switch(op.toLowerCase()) {
                 case "addiu":
@@ -343,20 +607,68 @@ class Program {
                 case "lui":
                     this.lui(tokens[0], tokens[1]);
                     break;
+                case "j":
+                    this.j(tokens[0]);
+                    break;
+                case "jr":
+                    this.jr(tokens[0]);
+                    break;
+                case "jal":
+                    this.jal(tokens[0]);
+                    break;
+                case "jalr":
+                    this.jalr(tokens[0]);
+                    break;
+                case "beq":
+                    this.beq(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "bne":
+                    this.bne(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "bltz":
+                    this.bltz(tokens[0], tokens[1]);
+                    break;
+                case "blez":
+                    this.blez(tokens[0], tokens[1]);
+                    break;
+                case "bgtz":
+                    this.bgtz(tokens[0], tokens[1]);
+                    break;
+                case "bgez":
+                    this.bgez(tokens[0], tokens[1]);
+                    break;
+                case "lw":
+                    this.lw(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "lb":
+                    this.lb(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "lbu":
+                    this.lbu(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sw":
+                    this.sw(tokens[0], tokens[1], tokens[2]);
+                    break;
+                case "sb":
+                    this.sb(tokens[0], tokens[1], tokens[2]);
+                    break;
                 default:
                     this.pushError("Unsupported Op [line " + this.line +"]: " + op);
             }
             this.registers[0] = 0; // MIPS register 0 is hard-wired to 0
         }
         else {
-            if (insn != '' && insn.charAt(0) != '#') { // don't error on empty/comment lines
+            if (insn != "nop") { // nops are valid instructions!
                 this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
             }
         }
     }
 
     runUntil(line) {
-        while((this.pc / 4) != line && (this.pc / 4) < this.insns.length) {
+        while ((this.pc / 4) < this.insns.length) {
+            if (this.insns[this.pc / 4][1] == line) {
+                break;
+            }
             this.step();
         }
     }
