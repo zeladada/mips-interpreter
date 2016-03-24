@@ -658,7 +658,7 @@ class Program {
             this.registers[0] = 0; // MIPS register 0 is hard-wired to 0
         }
         else {
-            if (insn != "nop") { // nops are valid instructions!
+            if (insn.toLowerCase() != "nop") { // nops are valid instructions!
                 this.pushError("Invalid instruction [line " + this.line + "]: " + insn);
             }
         }
