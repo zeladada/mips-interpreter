@@ -30,8 +30,8 @@ class Program {
                 if (this.labels[label] !== undefined) {
                     this.pushError("Found multiple instances of label: " + label + " [line " + lineNo + "]");
                 }
-                if (/(\d+)/.test(label)) {
-                    this.pushError("Cannot use numbers in label name: " + label + " [line " + lineNo + "]");
+                if (label.charAt(0) >= '0' && label.charAt(0) <= '9') {
+                    this.pushError("Label name cannot start with a number: " + label + " [line " + lineNo + "]");
                     continue;
                 }
                 this.labels[label] = filteredIndex; // make label point to the line after it (also zero-index -> one-index)
