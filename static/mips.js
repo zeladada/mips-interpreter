@@ -32,8 +32,9 @@ class Program {
         this.pc = 0x0;
         this.line = 0;
         this.registers = new Int32Array(32);
-        this.insns = instructions.split('\n').map(function(insn) {
         this.memory = new Memory();
+        this.insns = instructions || ""; // if instructions is undefined, program is empty
+        this.insns = this.insns.split('\n').map(function(insn) {
             return insn.trim();
         });
         this.labels = {};
