@@ -246,8 +246,10 @@
                 var byte3 = memory[i+2] << 16;
                 var msb = memory[i+3] << 24;
                 var memValue = msb + byte3 + byte2 + lsb;
-                memoryHTML += sprintf("<tr><td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
+                memoryHTML += (memValue == 0) ? '<tr>' : '<tr class="info">';
+                memoryHTML += sprintf("<td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</td>",
                     i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
+                memoryHTML += '</tr>';
             }
             document.getElementById('memory').innerHTML = memoryHTML;
         }
