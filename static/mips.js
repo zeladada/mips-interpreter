@@ -1,4 +1,30 @@
 "use strict";
+
+/* Memory is implemented using a hashmap of addresses to 8-bit unsigned values */
+class Memory {
+
+    constructor() {
+        this.memory = {};
+    }
+
+    getMem(address) {
+        if (this.memory[address] === undefined) {
+            return 0x00;
+        }
+        return this.memory[address] >>> 0;
+    }
+
+    setMem(address, value) {
+        value = value & 0xff; // truncates to 8-bit if needed
+        this.memory[address] = value;
+    }
+
+    isValidAddress(address) {
+        return 0 <= address && address <= 0x7fffffff;
+    }
+
+}
+
 class Program {
 
     constructor(instructions) {
@@ -6,8 +32,8 @@ class Program {
         this.pc = 0x0;
         this.line = 0;
         this.registers = new Int32Array(32);
-        this.memory = new Uint8Array(0xffffff + 1); // Creates a memory array addressable by 24-bit addresses = 64 MB
         this.insns = instructions.split('\n').map(function(insn) {
+        this.memory = new Memory();
             return insn.trim();
         });
         this.labels = {};
@@ -122,7 +148,7 @@ class Program {
 
     /** Verifies a memory range from loc1 - loc2 */
     verifyMemory(loc1, loc2) {
-        if (loc1 < 0 || loc1 >= 0xfffffff + 1 || loc2 < 0 || loc2 >= 0xfffffff + 1) {
+        if (!this.memory.isValidAddress(loc1) || !this.memory.isValidAddress(loc2)) {
             this.pushError("Invalid memory location [line " + this.line + "]: " + loc1 +
                     ((loc2 === undefined) ? "" : " to " + loc2));
         }
@@ -348,17 +374,17 @@ class Program {
     lw(rt, offset, base) {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc, loc+3);
-        var lsb = this.memory[loc];
-        var byte2 = this.memory[loc+1] << 8;
-        var byte3 = this.memory[loc+2] << 16;
-        var msb = this.memory[loc+3] << 24;
+        var lsb = this.memory.getMem(loc);
+        var byte2 = this.memory.getMem(loc+1) << 8;
+        var byte3 = this.memory.getMem(loc+2) << 16;
+        var msb = this.memory.getMem(loc+3) << 24;
         this.registers[rt] = msb + byte3 + byte2 + lsb;
     }
 
     lb(rt, offset, base) {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc);
-        var byteValue = this.memory[loc];
+        var byteValue = this.memory.getMem(loc);
         if (byteValue & 0x80 == 0x80) { // sign extend
             byteValue |= 0xffffff00;
         }
@@ -368,23 +394,23 @@ class Program {
     lbu(rt, offset, base) {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc);
-        this.registers[rt] = this.memory[loc];
+        this.registers[rt] = this.memory.getMem(loc);
     }
 
     sw(rt, offset, base) {
         var registerValue = this.registers[rt];
         var loc = offset + this.registers[base];
         this.verifyMemory(loc, loc+3);
-        this.memory[loc] = registerValue & 0x000000ff;
-        this.memory[loc+1] = (registerValue >>> 8) & 0x000000ff;
-        this.memory[loc+2] = (registerValue >>> 16) & 0x000000ff;
-        this.memory[loc+3] = (registerValue >>> 24) & 0x000000ff;
+        this.memory.setMem(loc, registerValue & 0x000000ff);
+        this.memory.setMem(loc+1, (registerValue >>> 8) & 0x000000ff);
+        this.memory.setMem(loc+2, (registerValue >>> 16) & 0x000000ff);
+        this.memory.setMem(loc+3, (registerValue >>> 24) & 0x000000ff);
     }
 
     sb(rt, offset, base) {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc);
-        this.memory[loc] = this.registers[rt] & 0x000000ff;
+        this.memory.setMem(loc, this.registers[rt] & 0x000000ff);
     }
 
     parseRegister(tok) {

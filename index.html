@@ -111,7 +111,7 @@
                 <div class="form-inline text-center">
                     <div class="form-group">
                         <label for="memory-address">Memory Address</label>
-                        <input type="text" id="memory-address" class="form-control" placeholder="0x00000000">
+                        <input type="text" id="memory-address" class="form-control" placeholder="0x00000000" value="0x00000000">
                     </div>
                     <button id="memory-go" class="btn btn-primary">Go</button>
                 </div>
@@ -236,20 +236,25 @@
         function displayMemory() {
             var memory = globalP.getMemory();
             var memoryHTML = "";
-            var addr = parseInt(document.getElementById('memory-address').value) || 0;
-            addr -= (addr % 4); // keep memory locations as multiples of 4
-            var start = Math.max(addr - 40, 0);
-            var end = Math.min(addr + 40, memory.length);
-            for (var i = start; i < end; i += 4) {
-                var lsb = memory[i];
-                var byte2 = memory[i+1] << 8;
-                var byte3 = memory[i+2] << 16;
-                var msb = memory[i+3] << 24;
-                var memValue = msb + byte3 + byte2 + lsb;
-                memoryHTML += (memValue == 0) ? '<tr>' : '<tr class="info">';
-                memoryHTML += sprintf("<td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</td>",
-                    i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
-                memoryHTML += '</tr>';
+            var memAddress = parseInt(document.getElementById('memory-address').value) || 0;
+            var addr =  memAddress - (memAddress % 4); // keep memory locations as multiples of 4
+            if (!memory.isValidAddress(addr)) {
+                memoryHTML = '<tr class="danger"><td>Invalid memory location: ' + sprintf("0x%x", memAddress) + '. Memory addresses must be from 0x00000000 - 0x7fffffff</td><td></td><td></td><td></td></tr>';
+            }
+            else {
+                var start = Math.max(addr - 40, 0x00000000);
+                var end = Math.min(addr + 40, 0x80000000);
+                for (var i = start; i < end; i += 4) {
+                    var lsb = memory.getMem(i);
+                    var byte2 = memory.getMem(i+1) << 8;
+                    var byte3 = memory.getMem(i+2) << 16;
+                    var msb = memory.getMem(i+3) << 24;
+                    var memValue = msb + byte3 + byte2 + lsb;
+                    memoryHTML += (memValue == 0) ? '<tr>' : '<tr class="info">';
+                    memoryHTML += sprintf("<td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</td>",
+                        i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
+                    memoryHTML += '</tr>';
+                }
             }
             document.getElementById('memory').innerHTML = memoryHTML;
         }
