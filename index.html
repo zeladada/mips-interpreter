@@ -37,7 +37,7 @@
                     </div>
                 </div>
                 <br>
-                <div id="current-instruction" class="well">The most recent instruction will be shown here when stepping.</div>
+                <div id="recent-instruction" class="well">The most recent instructions will be shown here when stepping.</div>
                 <hr>
                 <h4>Features</h4>
                 <ul>
@@ -152,12 +152,14 @@
     <script>
         "use strict";
         var globalP = undefined;
+        var recentInsns = [];
 
         function setup() {
             clearAlerts(); // Clear any previous warnings/errors
             var code = document.getElementById('code').value;
             var p = new Program(code);
             globalP = p;
+            recentInsns = [];
             displayRegisters();
             displayMemory();
             displayErrors();
@@ -165,7 +167,7 @@
 
         document.getElementById('reset').addEventListener('click', function() {
             setup();
-            document.getElementById('current-instruction').innerHTML = "The most recent instruction will be shown here when stepping."
+            document.getElementById('current-instruction').innerHTML = "The most recent instructions will be shown here when stepping."
         });
 
         document.getElementById('step').addEventListener('click', function() {
@@ -174,14 +176,19 @@
             }
             if (globalP.pc / 4 < globalP.insns.length) {
                 var currentInsn = globalP.insns[globalP.pc / 4];
-                document.getElementById('current-instruction').innerHTML = "[line " + currentInsn[1] + "]: " + currentInsn[0];
+                trackInsn(currentInsn);
+                document.getElementById('recent-instruction').innerHTML = "";
+                for (var i = 0; i < recentInsns.length-1; ++i) {
+                    document.getElementById('recent-instruction').innerHTML += "[line " + recentInsns[i][1] + "]: " + recentInsns[i][0] + "<br>";
+                }
+                document.getElementById('recent-instruction').innerHTML += '<span class="current">' + "[line " + currentInsn[1] + "]: " + currentInsn[0] + '</span>';
                 globalP.step();
                 displayRegisters();
                 displayMemory();
                 displayErrors();
             }
             else {
-                document.getElementById('current-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
+                document.getElementById('recent-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
             }
         });
 
@@ -209,6 +216,13 @@
 
         document.getElementById('memory-go').addEventListener('click', displayMemory);
 
+        function trackInsn(insn) {
+            if (recentInsns.length >= 4) {
+                recentInsns.shift(); // removes the oldest instruction
+            }
+            recentInsns.push(insn);
+        }
+
         function displayRegisters() {
             var registers = globalP.getRegisters();
             var registersHTML = "";
@@ -224,8 +238,8 @@
             var memoryHTML = "";
             var addr = parseInt(document.getElementById('memory-address').value) || 0;
             addr -= (addr % 4); // keep memory locations as multiples of 4
-            var start = Math.max(addr - 20, 0);
-            var end = Math.min(addr + 20, memory.length);
+            var start = Math.max(addr - 40, 0);
+            var end = Math.min(addr + 40, memory.length);
             for (var i = start; i < end; i += 4) {
                 var lsb = memory[i];
                 var byte2 = memory[i+1] << 8;

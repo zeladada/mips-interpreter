@@ -11,9 +11,14 @@ textarea {
     font-family: monospace;
 }
 
-#current-instruction {
+#recent-instruction {
     font-family: monospace;
     font-size: 12px;
+}
+
+#recent-instruction .current {
+    font-weight: bold;
+    color: #0074D9;
 }
 
 #registers,
@@ -31,6 +36,6 @@ textarea {
 }
 
 #memory-table {
-    max-height: 500px;
+    max-height: 600px;
 }
 
