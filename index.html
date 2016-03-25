@@ -35,6 +35,9 @@
                     <div class="btn-group">
                         <button id="run" class="btn btn-success">Run</button>
                     </div>
+                    <div class="btn-group" style="display: none;">
+                        <button id="stop" class="btn btn-danger">Stop</button>
+                    </div>
                 </div>
                 <br>
                 <div id="recent-instruction" class="well">The most recent instructions will be shown here when stepping.</div>
@@ -170,6 +173,9 @@
             displayRegisters();
             displayMemory();
             displayErrors();
+            document.getElementById('step').parentElement.style.display = "";
+            document.getElementById('run').parentElement.style.display = "";
+            document.getElementById('stop').parentElement.style.display = "none";
         }
 
         document.getElementById('reset').addEventListener('click', function() {
@@ -189,6 +195,16 @@
                 setup();
             }
             runner = setInterval(stepWithBreakpoint, 50);
+            document.getElementById('step').parentElement.style.display = "none";
+            document.getElementById('run').parentElement.style.display = "none";
+            document.getElementById('stop').parentElement.style.display = "";
+        });
+
+        document.getElementById('stop').addEventListener('click', function() {
+            stop();
+            document.getElementById('step').parentElement.style.display = "";
+            document.getElementById('run').parentElement.style.display = "";
+            document.getElementById('stop').parentElement.style.display = "none";
         });
 
         document.getElementById('memory-go').addEventListener('click', displayMemory);
@@ -225,7 +241,7 @@
                     stop();
                     if (breakline <= globalP.insns.length) { // only show warning if breakpoint stopped execution
                         document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + breakline + ". Breakpoint!";
-                        document.getElementById('warnings-container').style.display = "block";
+                        document.getElementById('warnings-container').style.display = "";
                     }
                 }
             }
@@ -291,7 +307,7 @@
             var errors = globalP.getErrors();
             if (errors.length > 0) {
                 document.getElementById('errors').innerHTML = errors.join('<br>');
-                document.getElementById('errors-container').style.display = "block";
+                document.getElementById('errors-container').style.display = "";
             }
         }
 
