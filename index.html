@@ -198,6 +198,7 @@
             if (globalP === undefined) {
                 setup();
             }
+            clearAlerts();
             runner = setInterval(stepWithBreakpoint, 50);
             document.getElementById('step').parentElement.style.display = "none";
             document.getElementById('run').parentElement.style.display = "none";
@@ -235,18 +236,26 @@
         function stepWithBreakpoint() {
             var breakpoints = document.getElementsByClassName('lineselect');
             if (breakpoints.length > 0) { // there is a breakpoint
-                var breakpoints = breakpoints.map(function(elem) {
-                    return parseInt(elem.innerHTML);
-                });
-                if (breakpoints.indexOf(this.insns[this.pc / 4][1] == -1))  { // not at a breakpoint
-                    step();
+                var breaklines = [];
+                for (var i = 0; i < breakpoints.length; ++i) {
+                    breaklines.push(parseInt(breakpoints[i].innerHTML));
+                }
+                var currentInsn = globalP.insns[globalP.pc / 4];
+                if (currentInsn !== undefined) {
+                    if (breaklines.indexOf(currentInsn[1]) == -1)  { // not at a breakpoint
+                        step();
+                    }
+                    else { // instruction is a breakpoint
+                        stop();
+                        document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + currentInsn[1] + ". Breakpoint!";
+                        document.getElementById('warnings-container').style.display = "";
+                        document.getElementById('step').parentElement.style.display = "";
+                        document.getElementById('run').parentElement.style.display = "";
+                        document.getElementById('stop').parentElement.style.display = "none";
+                    }
                 }
                 else {
-                    stop();
-                    if (breakline <= globalP.insns.length) { // only show warning if breakpoint stopped execution
-                        document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + breakline + ". Breakpoint!";
-                        document.getElementById('warnings-container').style.display = "";
-                    }
+                    document.getElementById('recent-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
                 }
             }
             else { // no breakpoint selected
