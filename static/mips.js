@@ -8,6 +8,7 @@ class Memory {
     }
 
     getMem(address) {
+        address = address >>> 0
         if (this.memory[address] === undefined) {
             return 0x00;
         }
@@ -15,11 +16,13 @@ class Memory {
     }
 
     setMem(address, value) {
+        address = address >>> 0
         value = value & 0xff; // truncates to 8-bit if needed
         this.memory[address] = value;
     }
 
     isValidAddress(address) {
+        address = address >>> 0
         return 0 <= address && address <= 0x7fffffff;
     }
 
