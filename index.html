@@ -300,9 +300,6 @@
             else { // no breakpoint selected
                 step();
             }
-            displayRegisters();
-            displayMemory();
-            displayErrors();
         }
 
         function stop() {
@@ -326,7 +323,9 @@
                 registersHTML += sprintf("<tr><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
                     i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
             }
-            document.getElementById('registers').innerHTML = registersHTML;
+            if (registersHTML != document.getElementById('registers').innerHTML) {
+                document.getElementById('registers').innerHTML = registersHTML;
+            }
         }
 
         function displayMemory() {
@@ -352,7 +351,9 @@
                     memoryHTML += '</tr>';
                 }
             }
-            document.getElementById('memory').innerHTML = memoryHTML;
+            if (memoryHTML != document.getElementById('memory').innerHTML) {
+                document.getElementById('memory').innerHTML = memoryHTML;
+            }
         }
 
         function displayErrors() {
