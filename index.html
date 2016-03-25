@@ -154,6 +154,10 @@
             $(this).toggleClass('lineselect');
         });
         $('#code').bind('input propertychange', function() { // if the MIPS code changes, invalidate the current program instance
+            if (runner !== undefined) {
+                document.getElementById('recent-instruction').innerHTML = "Execution automatically stopped because of code change."
+            }
+            stop();
             globalP = undefined;
         });
     </script>
