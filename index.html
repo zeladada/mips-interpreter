@@ -154,10 +154,11 @@
             $(this).toggleClass('lineselect');
         });
         $('#code').bind('input propertychange', function() { // if the MIPS code changes, invalidate the current program instance
-            if (runner !== undefined) {
-                document.getElementById('recent-instruction').innerHTML = "Execution automatically stopped because of code change."
-            }
             stop();
+            if (!programTerminated) {
+                programTerminated = true;
+                document.getElementById('recent-instruction').innerHTML += "<br>Execution automatically stopped because of code change."
+            }
             globalP = undefined;
         });
     </script>
@@ -166,10 +167,12 @@
         var globalP = new Program();
         var recentInsns = [];
         var runner = undefined;
+        var programTerminated = true;
 
         function setup() {
             stop();
             clearAlerts(); // Clear any previous warnings/errors
+            programTerminated = false;
             var code = document.getElementById('code').value;
             var p = new Program(code);
             globalP = p;
@@ -229,7 +232,10 @@
                 displayErrors();
             }
             else {
-                document.getElementById('recent-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
+                if (!programTerminated) {
+                    programTerminated = true;
+                    document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
+                }
             }
         }
 
@@ -255,7 +261,10 @@
                     }
                 }
                 else {
-                    document.getElementById('recent-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
+                    if (!programTerminated) {
+                        programTerminated = true;
+                        document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
+                    }
                 }
             }
             else { // no breakpoint selected
