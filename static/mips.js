@@ -64,7 +64,7 @@ class Program {
                 this.labels[label] = filteredIndex; // make label point to the line after it (also zero-index -> one-index)
             }
             else if (insn != '') { // ignore empty/comment lines
-                filteredInstructions.push([insn, lineNo]); // push instruction and line number for debugging purposes
+                filteredInstructions.push([insn, lineNo, insn]); // push instruction and line number for debugging purposes
                 filteredIndex++;
             }
         }

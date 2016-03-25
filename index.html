@@ -223,9 +223,9 @@
                 trackInsn(currentInsn);
                 document.getElementById('recent-instruction').innerHTML = "";
                 for (var i = 0; i < recentInsns.length-1; ++i) {
-                    document.getElementById('recent-instruction').innerHTML += "[line " + recentInsns[i][1] + "]: " + recentInsns[i][0] + "<br>";
+                    document.getElementById('recent-instruction').innerHTML += "[line " + recentInsns[i][1] + "]: " + recentInsns[i][2] + "<br>";
                 }
-                document.getElementById('recent-instruction').innerHTML += '<span class="current">' + "[line " + currentInsn[1] + "]: " + currentInsn[0] + '</span>';
+                document.getElementById('recent-instruction').innerHTML += '<span class="current">' + "[line " + currentInsn[1] + "]: " + currentInsn[2] + '</span>';
                 globalP.step();
                 displayRegisters();
                 displayMemory();
