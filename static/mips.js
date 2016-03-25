@@ -547,7 +547,7 @@ class Program {
 
     step() {
         if (this.pc / 4 >= this.insns.length || this.pc % 4 != 0) {
-            console.log("PC is invalid!!");
+            console.log("PC is invalid!! PC = " + this.pc);
             return;
         }
         var insn = this.insns[this.pc / 4][0];
