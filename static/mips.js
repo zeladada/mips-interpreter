@@ -88,8 +88,10 @@ class Program {
                         tokens[tokens.length-1] = this.labels[label]; // absolute jump to the label location
                     }
                     else {
-                        this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
-                        tokens[tokens.length-1] = 0x3ffffff; // most likely a label issue, so we want it to jump very far to the end
+                        if (isNaN(parseInt(label))) {
+                            this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
+                            tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to jump very far to the end
+                        }
                     }
                 }
                 else if (op == "beq" || op == "bne" || op == "bltz" || op == "blez" || op == "bgtz" || op == "bgez") {
@@ -97,8 +99,10 @@ class Program {
                         tokens[tokens.length-1] = this.labels[label] - (i + 1); // branch offset relative to delay slot instruction
                     }
                     else {
-                        this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
-                        tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to branch very far to the end
+                        if (isNaN(parseInt(label))) {
+                            this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
+                            tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to jump very far to the end
+                        }
                     }
                 }
                 this.insns[i][0] = op + " " + tokens.join(', '); // instruction with labels replaced
