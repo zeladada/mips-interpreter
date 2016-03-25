@@ -282,7 +282,11 @@ class Program {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delayslot = true;
             this.step();
-            this.pc = this.registers[rs]; // pc was incremented by 4 twice, once before the jump instruction in step() and another in the above call to step()
+            var newpc = this.registers[rs];
+            if (newpc % 4 != 0) {
+                this.pushError("Bad PC value to jump to for register " + rs + " [line " + this.line + "]: " + newpc);
+            }
+            this.pc = newpc;
             this.delaySlot = false;
         }
     }
@@ -535,7 +539,7 @@ class Program {
     }
 
     step() {
-        if (this.pc / 4 >= this.insns.length) {
+        if (this.pc / 4 >= this.insns.length || this.pc % 4 != 0) {
             console.log("PC is invalid!!");
             return;
         }
