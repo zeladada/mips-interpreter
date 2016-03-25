@@ -7,6 +7,12 @@ textarea {
     width: 100%;
 }
 
+#errors-container,
+#warning-container {
+    max-height: 300px;
+    overflow: scroll;
+}
+
 #errors {
     font-family: monospace;
 }
