@@ -54,8 +54,6 @@ The interpreter supports the following instructions:
 The following are not supported:
 
 - Directives, such as `.text` or `.word`
-- Memory address > 24 bits. Available memory is roughly 64MB
-
 
 ## Notes
 
