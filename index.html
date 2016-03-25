@@ -158,8 +158,10 @@
         "use strict";
         var globalP = new Program();
         var recentInsns = [];
+        var runner = undefined;
 
         function setup() {
+            stop();
             clearAlerts(); // Clear any previous warnings/errors
             var code = document.getElementById('code').value;
             var p = new Program(code);
@@ -179,6 +181,19 @@
             if (globalP === undefined) {
                 setup();
             }
+            step();
+        });
+
+        document.getElementById('run').addEventListener('click', function() {
+            if (globalP === undefined) {
+                setup();
+            }
+            runner = setInterval(stepWithBreakpoint, 50);
+        });
+
+        document.getElementById('memory-go').addEventListener('click', displayMemory);
+
+        function step() {
             if (globalP.pc / 4 < globalP.insns.length) {
                 var currentInsn = globalP.insns[globalP.pc / 4];
                 trackInsn(currentInsn);
@@ -195,31 +210,39 @@
             else {
                 document.getElementById('recent-instruction').innerHTML = "No more instructions to run! Press <em>Reset</em> to reload the code!";
             }
-        });
+        }
 
-        document.getElementById('run').addEventListener('click', function() {
-            if (globalP === undefined) {
-                setup();
-            }
+        function stepWithBreakpoint() {
             var breakpoints = document.getElementsByClassName('lineselect');
             if (breakpoints.length > 0) { // there is a breakpoint
-                var breakline = parseInt(breakpoints[0].innerHTML);
-                globalP.runUntil(breakline);
-                if (breakline <= globalP.insns.length) {
-                    document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + breakline + ". Breakpoint!";
-                    document.getElementById('warnings-container').style.display = "block";
+                var breakpoints = breakpoints.map(function(elem) {
+                    return parseInt(elem.innerHTML);
+                });
+                if (breakpoints.indexOf(this.insns[this.pc / 4][1] == -1))  { // not at a breakpoint
+                    step();
                 }
-                else{}
+                else {
+                    stop();
+                    if (breakline <= globalP.insns.length) { // only show warning if breakpoint stopped execution
+                        document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + breakline + ". Breakpoint!";
+                        document.getElementById('warnings-container').style.display = "block";
+                    }
+                }
             }
             else { // no breakpoint selected
-                globalP.run();
+                step();
             }
             displayRegisters();
             displayMemory();
             displayErrors();
-        });
+        }
 
-        document.getElementById('memory-go').addEventListener('click', displayMemory);
+        function stop() {
+            if (runner !== undefined) {
+                clearInterval(runner);
+            }
+            runner = undefined;
+        }
 
         function trackInsn(insn) {
             if (recentInsns.length >= 4) {
@@ -229,14 +252,14 @@
         }
 
         function displayRegisters() {
-            var registers = globalP.getRegisters();
+           var registers = globalP.getRegisters();
             var registersHTML = "";
             for (var i = 0; i < 32; ++i) {
                 registersHTML += sprintf("<tr><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
                     i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
             }
             document.getElementById('registers').innerHTML = registersHTML;
-        }
+       }
 
         function displayMemory() {
             var memory = globalP.getMemory();

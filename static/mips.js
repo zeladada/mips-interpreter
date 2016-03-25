@@ -695,15 +695,7 @@ class Program {
         }
     }
 
-    runUntil(line) {
-        while ((this.pc / 4) < this.insns.length) {
-            if (this.insns[this.pc / 4][1] == line) {
-                break;
-            }
-            this.step();
-        }
-    }
-
+    /** Not used in the main browser runner */
     run() {
         while ((this.pc / 4) < this.insns.length) {
             this.step();
