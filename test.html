@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>MIPS Interpreter QUnit Test</title>
+    <meta name="description" content="MIPS Assembly Interpreter written in Javascript">
+    <link rel="stylesheet" type="text/css" href="static/qunit-1.23.0.css">
+</head>
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="static/qunit-1.23.0.js"></script>
+    <script src="static/mips.js"></script>
+    <script type="text/javascript">
+        "use strict";
+        var p;
+
+        QUnit.test("greater than 16-bit immediate", function(assert) {
+            p = new Program('addiu $1, $1, 0x17fff');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0x7fff | 0), "addiu zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
+            p = new Program('addiu $1, $1, 0x1ffff');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xffffffff | 0), "addiu one extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
+
+            p = new Program('addiu $1, $1, 0xffff\nandi $2, $1, 0xff0f0\nandi $3, $1, 0x11111');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0xf0f0 | 0), "andi always zero extended immediate truncated to 16-bit");
+            assert.ok(p.getRegisters()[3] == (0x1111 | 0), "andi always zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 2, "andi immediate error is present");
+
+            p = new Program('ori $1, $1, 0xff0f0');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xf0f0 | 0), "ori always zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "ori immediate error is present");
+            p = new Program('ori $1, $1, 0x11111');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0x1111 | 0), "ori always zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "ori immediate error is present");
+
+            p = new Program('addiu $1, $1, 0xffff\nxori $1, $1, 0xff0f0');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xffff0f0f | 0), "xori always zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
+            p = new Program('addiu $1, $1, 0xffff\nxori $1, $1, 0x11111');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xffffeeee | 0), "xori always zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
+
+            p = new Program('addiu $1, $1, 0x8\nslti $2, $2, 0x10000');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x0 | 0), "slti zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "slti immediate error is present");
+            p = new Program('addiu $1, $1, 0x8\nslti $2, $2, 0xf7fff');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x1 | 0), "slti zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "slti immediate error is present");
+
+            p = new Program('addiu $1, $1, 0x8\nsltiu $2, $2, 0x10000');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x0 | 0), "sltiu zero extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "sltiu immediate error is present");
+            p = new Program('addiu $1, $1, 0x8\nsltiu $2, $2, 0xfffff');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x1 | 0), "sltiu one extended immediate truncated to 16-bit");
+            assert.ok(p.getErrors().length == 1, "sltiu immediate error is present");
+        });
+
+        QUnit.test("addiu", function(assert) {
+            p = new Program('addiu $1, $1, 0xdead');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xffffdead | 0), "Immediate is one sign extended");
+
+            p = new Program('addiu $1, $1, 0x7fff');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0x7fff | 0), "Immediate is zero sign extended");
+
+            p = new Program('addiu $1, $1, 0xffff\naddiu $2, $1, 0x1');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xffffffff | 0), "Immediate is one sign extended");
+            assert.ok(p.getRegisters()[2] == (0x0 | 0), "Immediate should is zero extended, sum is 0");
+        });
+
+        QUnit.test("andi", function(assert) {
+            p = new Program('addiu $1, $1, 0xffff\nandi $2, $1, 0xf0f0\nandi $3, $1, 0x1');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0xf0f0 | 0), "Immediate is always zero extended");
+            assert.ok(p.getRegisters()[3] == (0x1 | 0), "Immediate is always zero extended");
+        });
+
+        QUnit.test("ori", function(assert) {
+            p = new Program('addiu $1, $1, 0x70f0\nori $2, $1, 0x0f0f');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x7fff | 0), "Immediate is always zero extended");
+
+            p = new Program('addiu $1, $1, 0xffff\nori $2, $1, 0x0');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0xffffffff | 0), "Ori should not change original value if immediate is 0");
+        });
+
+        QUnit.test("xori", function(assert) {
+            p = new Program('addiu $1, $1, 0xffff\nxori $2, $1, 0x1');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0xfffffffe | 0), "Immediate is always zero extended");
+
+            p = new Program('addiu $1, $1, 0xffff\nxori $2, $1, 0xffff');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0xffff0000 | 0), "Immediate is always zero extended");
+        });
+
+        QUnit.test("slti", function(assert) {
+            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0x8');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than zero sign extended immediate");
+
+            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0x3');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0 | 0), "Value is not less than zero sign extended immediate");
+
+            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0x4');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0 | 0), "Value is equal to zero sign extended immediate");
+
+            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0xffff');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0 | 0), "Value is not less than one sign extended immediate");
+        });
+
+        QUnit.test("sltiu", function(assert) {
+            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0x5');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than zero sign extended immediate");
+
+            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0x4');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0 | 0), "Value is equal to zero sign extended immediate");
+
+            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0x3');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0 | 0), "Value is not less than zero sign extended immediate");
+
+            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0xffff');
+            p.run();
+            assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than one sign extended immediate");
+        });
+    </script>
+</body>
