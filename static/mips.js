@@ -421,6 +421,15 @@ class Program {
         this.memory.setMem(loc, this.registers[rt] & 0x000000ff);
     }
 
+    verifyTokenCount(tokens, count, format) {
+        if (tokens.length < count) {
+            this.pushError("Too few arguments [line " + this.line + "] for '" + format + "'");
+        }
+        if (tokens.length > count) {
+            this.pushError("Extra arguments [line " + this.line + "] for '" + format + "': " + tokens.slice(count, tokens.length).join(', '));
+        }
+    }
+
     parseRegister(tok) {
         switch(tok) {
             case "$zero":
@@ -573,117 +582,155 @@ class Program {
             }
             switch(op.toLowerCase()) {
                 case "addiu":
+                    this.verifyTokenCount(tokens, 3, "addiu $rt, $rs, immediate");
                     this.addiu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "andi":
+                    this.verifyTokenCount(tokens, 3, "andi $rt, $rs, immediate");
                     this.andi(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "ori":
+                    this.verifyTokenCount(tokens, 3, "ori $rt, $rs, immediate");
                     this.ori(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "xori":
+                    this.verifyTokenCount(tokens, 3, "xori $rt, $rs, immediate");
                     this.xori(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "slti":
+                    this.verifyTokenCount(tokens, 3, "slti $rt, $rs, immediate");
                     this.slti(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sltiu":
+                    this.verifyTokenCount(tokens, 3, "sltiu $rt, $rs, immediate");
                     this.sltiu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "addu":
+                    this.verifyTokenCount(tokens, 3, "addu $rd, $rs, $rt");
                     this.addu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "subu":
+                    this.verifyTokenCount(tokens, 3, "subu $rd, $rs, $rt");
                     this.subu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "and":
+                    this.verifyTokenCount(tokens, 3, "and $rd, $rs, $rt");
                     this.and(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "or":
+                    this.verifyTokenCount(tokens, 3, "or $rd, $rs, $rt");
                     this.or(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "xor":
+                    this.verifyTokenCount(tokens, 3, "xor $rd, $rs, $rt");
                     this.xor(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "nor":
+                    this.verifyTokenCount(tokens, 3, "nor $rd, $rs, $rt");
                     this.nor(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "slt":
+                    this.verifyTokenCount(tokens, 3, "slt $rd, $rs, $rt");
                     this.slt(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sltu":
+                    this.verifyTokenCount(tokens, 3, "sltu $rd, $rs, $rt");
                     this.sltu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "movn":
+                    this.verifyTokenCount(tokens, 3, "movn $rd, $rs, $rt");
                     this.movn(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "movz":
+                    this.verifyTokenCount(tokens, 3, "movz $rd, $rs, $rt");
                     this.movz(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sll":
+                    this.verifyTokenCount(tokens, 3, "sll $rd, $rt, sa");
                     this.sll(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "srl":
+                    this.verifyTokenCount(tokens, 3, "srl $rd, $rt, sa");
                     this.srl(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sra":
+                    this.verifyTokenCount(tokens, 3, "sra $rd, $rt, sa");
                     this.sra(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sllv":
+                    this.verifyTokenCount(tokens, 3, "sllv $rd, $rt, $rs");
                     this.sllv(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "srlv":
+                    this.verifyTokenCount(tokens, 3, "srlv $rd, $rt, $rs");
                     this.srlv(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "srav":
+                    this.verifyTokenCount(tokens, 3, "srav $rd, $rt, $rs");
                     this.srav(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lui":
+                    this.verifyTokenCount(tokens, 2, "lui $rt, immediate");
                     this.lui(tokens[0], tokens[1]);
                     break;
                 case "j":
+                    this.verifyTokenCount(tokens, 1, "j target");
                     this.j(tokens[0]);
                     break;
                 case "jr":
+                    this.verifyTokenCount(tokens, 1, "jr $rs");
                     this.jr(tokens[0]);
                     break;
                 case "jal":
+                    this.verifyTokenCount(tokens, 1, "jal target");
                     this.jal(tokens[0]);
                     break;
                 case "jalr":
+                    this.verifyTokenCount(tokens, 1, "jalr $rs");
                     this.jalr(tokens[0]);
                     break;
                 case "beq":
+                    this.verifyTokenCount(tokens, 3, "beq $rs, $rt, offset");
                     this.beq(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "bne":
+                    this.verifyTokenCount(tokens, 3, "bne $rs, $rt, offset");
                     this.bne(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "bltz":
+                    this.verifyTokenCount(tokens, 2, "bltz $rs, offset");
                     this.bltz(tokens[0], tokens[1]);
                     break;
                 case "blez":
+                    this.verifyTokenCount(tokens, 2, "blez $rs, offset");
                     this.blez(tokens[0], tokens[1]);
                     break;
                 case "bgtz":
+                    this.verifyTokenCount(tokens, 2, "bgtz $rs, offset");
                     this.bgtz(tokens[0], tokens[1]);
                     break;
                 case "bgez":
+                    this.verifyTokenCount(tokens, 2, "bgez $rs, offset");
                     this.bgez(tokens[0], tokens[1]);
                     break;
                 case "lw":
+                    this.verifyTokenCount(tokens, 3, "lw $rt, offset(base $rs)");
                     this.lw(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lb":
+                    this.verifyTokenCount(tokens, 3, "lb $rt, offset(base $rs)");
                     this.lb(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lbu":
+                    this.verifyTokenCount(tokens, 3, "lbu $rt, offset(base $rs)");
                     this.lbu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sw":
+                    this.verifyTokenCount(tokens, 3, "sw $rt, offset(base $rs)");
                     this.sw(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sb":
+                    this.verifyTokenCount(tokens, 3, "sb $rt, offset(base $rs)");
                     this.sb(tokens[0], tokens[1], tokens[2]);
                     break;
                 default:
