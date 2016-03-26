@@ -397,7 +397,7 @@ class Program {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc);
         var byteValue = this.memory.getMem(loc);
-        if (byteValue & 0x80 == 0x80) { // sign extend
+        if ((byteValue & 0x80) == 0x80) { // sign extend
             byteValue |= 0xffffff00;
         }
         this.registers[rt] = byteValue;
