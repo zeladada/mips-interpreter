@@ -111,11 +111,7 @@ class Program {
     }
 
     getRegisters() {
-        var registerCopy = [];
-        for (var i = 0; i < 32; ++i) {
-            registerCopy.push(this.registers[i]);
-        }
-        return registerCopy;
+        return this.registers;
     }
 
     getMemory() {
