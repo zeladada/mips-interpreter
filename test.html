@@ -146,5 +146,53 @@
             p.run();
             assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than one sign extended immediate");
         });
+
+        QUnit.test("writing to $0", function(assert) {
+            p = new Program('addiu $0, $0, 0xbeef');
+            p.run();
+            assert.ok(p.getRegisters()[0] == 0, "Cannot write to $0 register");
+        });
+
+        function setupTest(instructions) {
+            var program = new Program(instructions);
+            for (var i = 0; i < 32; ++i) {
+                program.registers[i] = i | 0;
+            }
+            return program;
+        }
+
+        QUnit.test("addu", function(assert) {
+            p = setupTest('addu $5, $1, $5');
+            p.run();
+            assert.ok(p.getRegisters()[5] == 6,  "5 + 1 = 6");
+
+            p = setupTest('addu $2, $2, $1');
+            p.registers[2] = 0x7fffffff | 0;
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x80000000 | 0), "Overflow");
+
+            p = setupTest('addu $2, $2, $1');
+            p.registers[1] = -1 | 0;
+            p.registers[2] = 0x80000000 | 0;
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x7fffffff | 0), "Underflow");
+        });
+
+        QUnit.test("subu", function(assert) {
+            p = setupTest('subu $5, $5, $1');
+            p.run();
+            assert.ok(p.getRegisters()[5] = 4, "5 - 1 = 4");
+
+            p = setupTest('subu $2, $2, $1');
+            p.registers[1] = 0xffffffff | 0;
+            p.registers[2] = 0x7fffffff | 0;
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x80000000 | 0), "Overflow");
+
+            p = setupTest('subu $2, $2, $1');
+            p.registers[2] = 0x80000000 | 0;
+            p.run();
+            assert.ok(p.getRegisters()[2] == (0x7fffffff | 0), "Underflow");
+        });
     </script>
 </body>
