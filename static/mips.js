@@ -294,11 +294,11 @@ class Program {
         }
     }
 
-    jalr(target) {
+    jalr(rd, rs) {
         if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
-            this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+            this.registers[rd] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
         }
-        this.jr(target);
+        this.jr(rs);
     }
 
     beq(rs, rt, offset) {
@@ -686,8 +686,11 @@ class Program {
                     this.jal(tokens[0]);
                     break;
                 case "jalr":
-                    this.verifyTokenCount(tokens, 1, "jalr $rs");
-                    this.jalr(tokens[0]);
+                    if (tokens.length == 1) {
+                        tokens.unshift(31); // use $31 as $rd
+                    }
+                    this.verifyTokenCount(tokens, 2, "jalr $rd, $rs");
+                    this.jalr(tokens[0], tokens[1]);
                     break;
                 case "beq":
                     this.verifyTokenCount(tokens, 3, "beq $rs, $rt, offset");
