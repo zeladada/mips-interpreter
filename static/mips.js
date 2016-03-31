@@ -1,5 +1,7 @@
 "use strict";
 
+// TODO: Use function class definition fallback since classes support is ECMAScript 6
+
 /* Memory is implemented using a hashmap of addresses to 8-bit unsigned values */
 class Memory {
 

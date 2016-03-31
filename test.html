@@ -69,6 +69,16 @@
             assert.ok(p.getErrors().length == 1, "sltiu immediate error is present");
         });
 
+        QUnit.test("reject unsupported operands", function(assert) {
+            p = new Program("add $4, $4, $4");
+            p.run();
+            assert.ok(p.getErrors().length == 1, "error with add (supported is addu)");
+
+            p = new Program("nori $3, $1, $0\nasdf $20, $19, $10");
+            p.run();
+            assert.ok(p.getErrors().length == 2, "errors compound with two unspported instructions");
+        });
+
         QUnit.test("addiu", function(assert) {
             p = new Program('addiu $1, $1, 0xdead');
             p.run();
@@ -150,7 +160,11 @@
         QUnit.test("writing to $0", function(assert) {
             p = new Program('addiu $0, $0, 0xbeef');
             p.run();
-            assert.ok(p.getRegisters()[0] == 0, "Cannot write to $0 register");
+            assert.ok(p.getRegisters()[0] === 0, "Cannot write to $0 register");
+
+            p = new Program('ori $3, $0, 0x123\nori $5, $0, 0x321\naddu $0, $3, $5');
+            p.run();
+            assert.ok(p.getRegisters()[0] === 0, "Cannot write to $0 register");
         });
 
         function setupTest(instructions) {
@@ -194,5 +208,50 @@
             p.run();
             assert.ok(p.getRegisters()[2] == (0x7fffffff | 0), "Underflow");
         });
+
+        QUnit.test("and", function(assert) {
+            p = setupTest('and $4, $4, $4');
+            p.run();
+            assert.ok(p.getRegisters()[4] == 4, "4 & 4 = 4");
+
+            p = setupTest('and $1, $31, $2');
+            p.run();
+            assert.ok(p.getRegisters()[1] == 2, "31 & 2 = 2");
+        });
+
+        QUnit.test("or", function(assert) {
+            p = setupTest('or $1, $8, $7');
+            p.run();
+            assert.ok(p.getRegisters()[1] == 15, "8 | 7 = 15");
+
+            p = setupTest('or $5, $0, $5');
+            p.run();
+            assert.ok(p.getRegisters()[5] == 5, "5 | 0 = 5");
+        });
+
+        QUnit.test("xor", function(assert) {
+            p = setupTest('xor $5, $5, $5');
+            p.run();
+            assert.ok(p.getRegisters()[5] == 0, "5 ^ 5 = 0");
+
+            p = setupTest('xor $1, $10, $5');
+            p.run();
+            assert.ok(p.getRegisters()[1] == 15, "10 ^ 5 = 15");
+        });
+
+        QUnit.test("nor", function(assert) {
+            p = setupTest('nor $1, $10, $5');
+            p.run();
+            assert.ok(p.getRegisters()[1] == (0xfffffff0 | 0), "~(10 | 5) = -16");
+
+            p = setupTest('nor $3, $8, $9');
+            p.run();
+            assert.ok(p.getRegisters()[3] == (0xfffffff6 | 0), "~(10 | 5) = -10");
+        });
+
+        // TODO: verify little endianness
+        // TODO: verify jump/branches conditions
+        // TODO: verify delay slot
+        // TODO: verify labels
     </script>
 </body>
