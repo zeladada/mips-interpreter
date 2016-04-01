@@ -268,7 +268,7 @@ class Program {
 
     j(target) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
-            this.delayslot = true;
+            this.delaySlot = true;
             var newpc = (this.pc & 0xf0000000) + (target << 2); // pc already points to instruction in delay slot
             this.step();
             this.pc = newpc;
@@ -285,7 +285,7 @@ class Program {
 
     jr(rs) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
-            this.delayslot = true;
+            this.delaySlot = true;
             this.step();
             var newpc = this.registers[rs];
             if (newpc % 4 != 0) {
