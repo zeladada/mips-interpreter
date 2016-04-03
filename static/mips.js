@@ -87,23 +87,23 @@ class Program {
                 var label = tokens[tokens.length-1].trim(); // label comes at the very end
                 if (op == "j" || op == "jal") {
                     if (this.labels[label] !== undefined) {
-                        tokens[tokens.length-1] = this.labels[label]; // absolute jump to the label location
+                        tokens[tokens.length-1] = (this.labels[label]) << 2; // absolute jump to the label location
                     }
                     else {
                         if (isNaN(parseInt(label))) {
                             this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
-                            tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to jump very far to the end
+                            tokens[tokens.length-1] = 0x2ffffff << 2; // most likely a label issue, so we want it to jump very far to the end
                         }
                     }
                 }
                 else if (op == "beq" || op == "bne" || op == "bltz" || op == "blez" || op == "bgtz" || op == "bgez") {
                     if (this.labels[label] !== undefined) {
-                        tokens[tokens.length-1] = this.labels[label] - (i + 1); // branch offset relative to delay slot instruction
+                        tokens[tokens.length-1] = (this.labels[label] - (i + 1)) << 2; // branch offset relative to delay slot instruction
                     }
                     else {
                         if (isNaN(parseInt(label))) {
                             this.pushError("Could not find label: " + label + " [line " + lineNo + "]");
-                            tokens[tokens.length-1] = 0x7fff; // most likely a label issue, so we want it to jump very far to the end
+                            tokens[tokens.length-1] = 0x7fff << 2; // most likely a label issue, so we want it to branch very far to the end
                         }
                     }
                 }
@@ -141,6 +141,22 @@ class Program {
             imm |= 0xffff0000;
         }
         return imm;
+    }
+
+    /** Verifies that an offset is valid (multiple of 4) */
+    verifyOffset(offset) {
+        if (offset % 4 !== 0) {
+            this.pushError("Misaligned branch offset (must be a multiple of 4) [line " + this.line + "]: " + offset);
+            return false;
+        }
+        return true;
+    }
+
+    offsetPad(offset) {
+        if ((offset & 0x20000) == 0x20000) { // check that 17th bit is 1
+            offset |= 0xfffc0000; // sign extend 18 bits to 32 bits
+        }
+        return offset;
     }
 
     /** Verifies that there is another delay slot in progress */
@@ -269,7 +285,11 @@ class Program {
     j(target) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
-            var newpc = (this.pc & 0xf0000000) + (target << 2); // pc already points to instruction in delay slot
+            var newpc = (this.pc & 0xf0000000) + target; // pc already points to instruction in delay slot
+            if (newpc % 4 !== 0) {
+                this.pushError("Misaligned jump target (must be a multiple of 4) [line " + this.line + "]: " + target);
+                return;
+            }
             this.step();
             this.pc = newpc;
             this.delaySlot = false;
@@ -286,11 +306,12 @@ class Program {
     jr(rs) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
-            this.step();
             var newpc = this.registers[rs];
-            if (newpc % 4 != 0) {
-                this.pushError("Bad PC value to jump to for register " + rs + " [line " + this.line + "]: " + newpc);
+            if (newpc % 4 !== 0) {
+                this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4) [line " + this.line + "]: " + newpc);
+                return;
             }
+            this.step();
             this.pc = newpc;
             this.delaySlot = false;
         }
@@ -304,80 +325,92 @@ class Program {
     }
 
     beq(rs, rt, offset) {
-        offset = this.immPad(offset);
-        if (!this.verifyDelaySlot()) {
-            this.delaySlot = true;
-            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
-            this.step();
-            if (this.registers[rs] == this.registers[rt]) {
-                this.pc = newpc;
+        if (this.verifyOffset(offset)) {
+            offset = this.offsetPad(offset);
+            if (!this.verifyDelaySlot()) {
+                this.delaySlot = true;
+                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                this.step();
+                if (this.registers[rs] == this.registers[rt]) {
+                    this.pc = newpc;
+                }
+                this.delaySlot = false;
             }
-            this.delaySlot = false;
         }
     }
 
     bne(rs, rt, offset) {
-        offset = this.immPad(offset);
-        if (!this.verifyDelaySlot()) {
-            this.delaySlot = true;
-            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
-            this.step();
-            if (this.registers[rs] != this.registers[rt]) {
-                this.pc = newpc;
+        if (this.verifyOffset(offset)) {
+            offset = this.offsetPad(offset);
+            if (!this.verifyDelaySlot()) {
+                this.delaySlot = true;
+                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                this.step();
+                if (this.registers[rs] != this.registers[rt]) {
+                    this.pc = newpc;
+                }
+                this.delaySlot = false;
             }
-            this.delaySlot = false;
         }
     }
 
     bltz(rs, offset) {
-        offset = this.immPad(offset);
-        if (!this.verifyDelaySlot()) {
-            this.delaySlot = true;
-            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
-            this.step();
-            if (this.registers[rs] < 0) {
-                this.pc = newpc;
+        if (this.verifyOffset(offset)) {
+            offset = this.offsetPad(offset);
+            if (!this.verifyDelaySlot()) {
+                this.delaySlot = true;
+                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                this.step();
+                if (this.registers[rs] < 0) {
+                    this.pc = newpc;
+                }
+                this.delaySlot = false;
             }
-            this.delaySlot = false;
         }
     }
 
     blez(rs, offset) {
-        offset = this.immPad(offset);
-        if (!this.verifyDelaySlot()) {
-            this.delaySlot = true;
-            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
-            this.step();
-            if (this.registers[rs] <= 0) {
-                this.pc = newpc;
+        if (this.verifyOffset(offset)) {
+            offset = this.offsetPad(offset);
+            if (!this.verifyDelaySlot()) {
+                this.delaySlot = true;
+                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                this.step();
+                if (this.registers[rs] <= 0) {
+                    this.pc = newpc;
+                }
+                this.delaySlot = false;
             }
-            this.delaySlot = false;
         }
     }
 
     bgtz(rs, offset) {
-        offset = this.immPad(offset);
-        if (!this.verifyDelaySlot()) {
-            this.delaySlot = true;
-            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
-            this.step();
-            if (this.registers[rs] > 0) {
-                this.pc = newpc;
+        if (this.verifyOffset(offset)) {
+            offset = this.offsetPad(offset);
+            if (!this.verifyDelaySlot()) {
+                this.delaySlot = true;
+                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                this.step();
+                if (this.registers[rs] > 0) {
+                    this.pc = newpc;
+                }
+                this.delaySlot = false;
             }
-            this.delaySlot = false;
         }
     }
 
     bgez(rs, offset) {
-        offset = this.immPad(offset);
-        if (!this.verifyDelaySlot()) {
-            this.delaySlot = true;
-            var newpc = this.pc + (offset << 2); // pc already points to instruction in delay slot
-            this.step();
-            if (this.registers[rs] >= 0) {
-                this.pc = newpc;
+        if (this.verifyOffset(offset)) {
+            offset = this.offsetPad(offset);
+            if (!this.verifyDelaySlot()) {
+                this.delaySlot = true;
+                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                this.step();
+                if (this.registers[rs] >= 0) {
+                    this.pc = newpc;
+                }
+                this.delaySlot = false;
             }
-            this.delaySlot = false;
         }
     }
 
