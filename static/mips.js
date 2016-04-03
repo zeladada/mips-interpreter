@@ -129,6 +129,7 @@ class Program {
         this.errors.push(errmsg);
     }
 
+    /** Ensures that immediate is 16 bits */
     normalizeImm(imm) {
         if (imm > 0xffff) {
             this.pushError("Immediate is more than 16 bits [line " + this.line + "]: " + imm);
@@ -136,9 +137,10 @@ class Program {
         return imm & 0xffff;
     }
 
+    /** Sign extends a 16-bit immediate if needed */
     immPad(imm) {
-        if ((imm & 0x8000) == 0x8000) { // sign extend
-            imm |= 0xffff0000;
+        if ((imm & 0x8000) == 0x8000) { // check that 15th bit is 1
+            imm |= 0xffff0000; // sign extend 16 bits to 32 bits
         }
         return imm;
     }
@@ -152,6 +154,7 @@ class Program {
         return true;
     }
 
+    /** Sign extends an 18-bit offset if needed */
     offsetPad(offset) {
         if ((offset & 0x20000) == 0x20000) { // check that 17th bit is 1
             offset |= 0xfffc0000; // sign extend 18 bits to 32 bits
@@ -168,7 +171,7 @@ class Program {
         return false;
     }
 
-    /** Verifies a memory range from loc1 - loc2 */
+    /** Verifies a memory range from loc1 -> loc2 */
     verifyMemory(loc1, loc2) {
         if (!this.memory.isValidAddress(loc1) || !this.memory.isValidAddress(loc2)) {
             this.pushError("Invalid memory location [line " + this.line + "]: " + loc1 +
@@ -428,7 +431,7 @@ class Program {
         var loc = offset + this.registers[base];
         this.verifyMemory(loc);
         var byteValue = this.memory.getMem(loc);
-        if ((byteValue & 0x80) == 0x80) { // sign extend
+        if ((byteValue & 0x80) == 0x80) { // sign extend 8-bit -> 32-bit
             byteValue |= 0xffffff00;
         }
         this.registers[rt] = byteValue;
@@ -575,9 +578,6 @@ class Program {
         }
         else {
             value = parseInt(tok);
-            if (isNaN(value)) {
-                value = this.labels[tok];
-            }
             if (value === undefined) {
                 this.pushError("Unknown value [line " + this.line + "]: " + tok);
             }
