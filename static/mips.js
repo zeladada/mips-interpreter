@@ -291,10 +291,11 @@ class Program {
             var newpc = (this.pc & 0xf0000000) + target; // pc already points to instruction in delay slot
             if (newpc % 4 !== 0) {
                 this.pushError("Misaligned jump target (must be a multiple of 4) [line " + this.line + "]: " + target);
-                return;
             }
-            this.step();
-            this.pc = newpc;
+            else {
+                this.step();
+                this.pc = newpc;
+            }
             this.delaySlot = false;
         }
     }
@@ -302,8 +303,8 @@ class Program {
     jal(target) {
         if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
             this.registers[31] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+            this.j(target);
         }
-        this.j(target);
     }
 
     jr(rs) {
@@ -312,10 +313,11 @@ class Program {
             var newpc = this.registers[rs];
             if (newpc % 4 !== 0) {
                 this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4) [line " + this.line + "]: " + newpc);
-                return;
             }
-            this.step();
-            this.pc = newpc;
+            else {
+                this.step();
+                this.pc = newpc;
+            }
             this.delaySlot = false;
         }
     }
@@ -323,8 +325,8 @@ class Program {
     jalr(rd, rs) {
         if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
             this.registers[rd] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
+            this.jr(rs);
         }
-        this.jr(rs);
     }
 
     beq(rs, rt, offset) {
