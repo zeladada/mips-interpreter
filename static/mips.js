@@ -10,7 +10,7 @@ class Memory {
     }
 
     getMem(address) {
-        address = address >>> 0
+        address = address >>> 0;
         if (this.memory[address] === undefined) {
             return 0x00;
         }
@@ -18,13 +18,13 @@ class Memory {
     }
 
     setMem(address, value) {
-        address = address >>> 0
+        address = address >>> 0;
         value = value & 0xff; // truncates to 8-bit if needed
         this.memory[address] = value;
     }
 
     isValidAddress(address) {
-        address = address >>> 0
+        address = address >>> 0;
         return 0 <= address && address <= 0x7fffffff;
     }
 
@@ -174,8 +174,8 @@ class Program {
     /** Verifies a memory range from loc1 -> loc2 */
     verifyMemory(loc1, loc2) {
         if (!this.memory.isValidAddress(loc1) || !this.memory.isValidAddress(loc2)) {
-            this.pushError("Invalid memory location [line " + this.line + "]: " + loc1 +
-                    ((loc2 === undefined) ? "" : " to " + loc2));
+            this.pushError("Invalid memory location [line " + this.line + "]: " + (loc1 >>> 0) +
+                    ((loc2 === undefined) ? "" : " to " + (loc2 >>> 0)));
         }
     }
 
