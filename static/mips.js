@@ -335,8 +335,12 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                this.step();
+                var branch = false;
                 if (this.registers[rs] == this.registers[rt]) {
+                    branch = true;
+                }
+                this.step();
+                if (branch) {
                     this.pc = newpc;
                 }
                 this.delaySlot = false;
@@ -350,8 +354,12 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                this.step();
+                var branch = false;
                 if (this.registers[rs] != this.registers[rt]) {
+                    branch = true;
+                }
+                this.step();
+                if (branch) {
                     this.pc = newpc;
                 }
                 this.delaySlot = false;
@@ -365,8 +373,12 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                this.step();
+                var branch = false;
                 if (this.registers[rs] < 0) {
+                    branch = true;
+                }
+                this.step();
+                if (branch) {
                     this.pc = newpc;
                 }
                 this.delaySlot = false;
@@ -380,8 +392,12 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                this.step();
+                var branch = false;
                 if (this.registers[rs] <= 0) {
+                    branch = true;
+                }
+                this.step();
+                if (branch) {
                     this.pc = newpc;
                 }
                 this.delaySlot = false;
@@ -395,8 +411,12 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                this.step();
+                var branch = false;
                 if (this.registers[rs] > 0) {
+                    branch = true;
+                }
+                this.step();
+                if (branch) {
                     this.pc = newpc;
                 }
                 this.delaySlot = false;
@@ -410,8 +430,12 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                this.step();
+                var branch = false;
                 if (this.registers[rs] >= 0) {
+                    branch = true;
+                }
+                this.step();
+                if (branch) {
                     this.pc = newpc;
                 }
                 this.delaySlot = false;
