@@ -310,7 +310,7 @@ class Program {
     jr(rs) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
-            var newpc = this.registers[rs];
+            var newpc = this.registers[rs] >>> 0;
             if (newpc % 4 !== 0) {
                 this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4) [line " + this.line + "]: " + newpc);
             }
