@@ -258,11 +258,11 @@
             assert.ok(p.getRegisters()[5] != 0xdead, "Condition true: Branch is taken");
             assert.ok(p.getRegisters()[4] == 0xbabe , "Condition true: Branched instruction is executed");
 
-            p = new Program('ori $10, $10, 0xbeef \n beq $0, $1, 0x8 \n addiu $1, $1, 1 \n ori $5, $5, 0xdead \n ori $4, $4, 0xbabe');
+            p = new Program('ori $1, $1, 0xbeef \n beq $0, $1, 0x8 \n andi $1, $1, 0 \n ori $5, $5, 0xdead \n ori $4, $4, 0xbabe');
             p.run();
-            assert.ok(p.getRegisters()[1] == 1, "Condition false: Delay slot instruction is executed");
+            assert.ok(p.getRegisters()[1] == 0, "Condition false: Delay slot instruction is executed, does not affect branch check");
             assert.ok(p.getRegisters()[5] == 0xdead, "Condition false: Branch is not taken");
-            assert.ok(p.getRegisters()[4] == 0xbabe , "Condition false: Following instruction is executed");
+            assert.ok(p.getRegisters()[4] == 0xbabe , "Condition false: Branch is not taken, all instructions were executed");
 
             p = new Program('beq $0, $0, -4 \n addiu $1, $1, 1'); // program should continously loop, while executing delay slot instruction
             for (var i = 0; i < 10; ++i) {
