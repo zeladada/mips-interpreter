@@ -26,7 +26,7 @@
             assert.ok(p.getRegisters()[1] == (0xffffffff | 0), "addiu one extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
 
-            p = new Program('addiu $1, $1, 0xffff\nandi $2, $1, 0xff0f0\nandi $3, $1, 0x11111');
+            p = new Program('addiu $1, $1, 0xffff \n andi $2, $1, 0xff0f0 \n andi $3, $1, 0x11111');
             p.run();
             assert.ok(p.getRegisters()[2] == (0xf0f0 | 0), "andi always zero extended immediate truncated to 16-bit");
             assert.ok(p.getRegisters()[3] == (0x1111 | 0), "andi always zero extended immediate truncated to 16-bit");
@@ -41,29 +41,29 @@
             assert.ok(p.getRegisters()[1] == (0x1111 | 0), "ori always zero extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "ori immediate error is present");
 
-            p = new Program('addiu $1, $1, 0xffff\nxori $1, $1, 0xff0f0');
+            p = new Program('addiu $1, $1, 0xffff \n xori $1, $1, 0xff0f0');
             p.run();
             assert.ok(p.getRegisters()[1] == (0xffff0f0f | 0), "xori always zero extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
-            p = new Program('addiu $1, $1, 0xffff\nxori $1, $1, 0x11111');
+            p = new Program('addiu $1, $1, 0xffff \n xori $1, $1, 0x11111');
             p.run();
             assert.ok(p.getRegisters()[1] == (0xffffeeee | 0), "xori always zero extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "addiu immediate error is present");
 
-            p = new Program('addiu $1, $1, 0x8\nslti $2, $2, 0x10000');
+            p = new Program('addiu $1, $1, 0x8 \n slti $2, $2, 0x10000');
             p.run();
             assert.ok(p.getRegisters()[2] == (0x0 | 0), "slti zero extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "slti immediate error is present");
-            p = new Program('addiu $1, $1, 0x8\nslti $2, $2, 0xf7fff');
+            p = new Program('addiu $1, $1, 0x8 \n slti $2, $2, 0xf7fff');
             p.run();
             assert.ok(p.getRegisters()[2] == (0x1 | 0), "slti zero extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "slti immediate error is present");
 
-            p = new Program('addiu $1, $1, 0x8\nsltiu $2, $2, 0x10000');
+            p = new Program('addiu $1, $1, 0x8 \n sltiu $2, $2, 0x10000');
             p.run();
             assert.ok(p.getRegisters()[2] == (0x0 | 0), "sltiu zero extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "sltiu immediate error is present");
-            p = new Program('addiu $1, $1, 0x8\nsltiu $2, $2, 0xfffff');
+            p = new Program('addiu $1, $1, 0x8 \n sltiu $2, $2, 0xfffff');
             p.run();
             assert.ok(p.getRegisters()[2] == (0x1 | 0), "sltiu one extended immediate truncated to 16-bit");
             assert.ok(p.getErrors().length == 1, "sltiu immediate error is present");
@@ -74,7 +74,7 @@
             p.run();
             assert.ok(p.getErrors().length == 1, "error with add (supported is addu)");
 
-            p = new Program("nori $3, $1, $0\nasdf $20, $19, $10");
+            p = new Program("nori $3, $1, $0 \n asdf $20, $19, $10");
             p.run();
             assert.ok(p.getErrors().length == 2, "errors compound with two unspported instructions");
         });
@@ -88,71 +88,71 @@
             p.run();
             assert.ok(p.getRegisters()[1] == (0x7fff | 0), "Immediate is zero sign extended");
 
-            p = new Program('addiu $1, $1, 0xffff\naddiu $2, $1, 0x1');
+            p = new Program('addiu $1, $1, 0xffff \n addiu $2, $1, 0x1');
             p.run();
             assert.ok(p.getRegisters()[1] == (0xffffffff | 0), "Immediate is one sign extended");
             assert.ok(p.getRegisters()[2] == (0x0 | 0), "Immediate should is zero extended, sum is 0");
         });
 
         QUnit.test("andi", function(assert) {
-            p = new Program('addiu $1, $1, 0xffff\nandi $2, $1, 0xf0f0\nandi $3, $1, 0x1');
+            p = new Program('addiu $1, $1, 0xffff \n andi $2, $1, 0xf0f0 \n andi $3, $1, 0x1');
             p.run();
             assert.ok(p.getRegisters()[2] == (0xf0f0 | 0), "Immediate is always zero extended");
             assert.ok(p.getRegisters()[3] == (0x1 | 0), "Immediate is always zero extended");
         });
 
         QUnit.test("ori", function(assert) {
-            p = new Program('addiu $1, $1, 0x70f0\nori $2, $1, 0x0f0f');
+            p = new Program('addiu $1, $1, 0x70f0 \n ori $2, $1, 0x0f0f');
             p.run();
             assert.ok(p.getRegisters()[2] == (0x7fff | 0), "Immediate is always zero extended");
 
-            p = new Program('addiu $1, $1, 0xffff\nori $2, $1, 0x0');
+            p = new Program('addiu $1, $1, 0xffff \n ori $2, $1, 0x0');
             p.run();
             assert.ok(p.getRegisters()[2] == (0xffffffff | 0), "Ori should not change original value if immediate is 0");
         });
 
         QUnit.test("xori", function(assert) {
-            p = new Program('addiu $1, $1, 0xffff\nxori $2, $1, 0x1');
+            p = new Program('addiu $1, $1, 0xffff \n xori $2, $1, 0x1');
             p.run();
             assert.ok(p.getRegisters()[2] == (0xfffffffe | 0), "Immediate is always zero extended");
 
-            p = new Program('addiu $1, $1, 0xffff\nxori $2, $1, 0xffff');
+            p = new Program('addiu $1, $1, 0xffff \n xori $2, $1, 0xffff');
             p.run();
             assert.ok(p.getRegisters()[2] == (0xffff0000 | 0), "Immediate is always zero extended");
         });
 
         QUnit.test("slti", function(assert) {
-            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0x8');
+            p = new Program('addiu $1, $1, 0x4 \n slti $2, $1, 0x8');
             p.run();
             assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than zero sign extended immediate");
 
-            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0x3');
+            p = new Program('addiu $1, $1, 0x4 \n slti $2, $1, 0x3');
             p.run();
             assert.ok(p.getRegisters()[2] == (0 | 0), "Value is not less than zero sign extended immediate");
 
-            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0x4');
+            p = new Program('addiu $1, $1, 0x4 \n slti $2, $1, 0x4');
             p.run();
             assert.ok(p.getRegisters()[2] == (0 | 0), "Value is equal to zero sign extended immediate");
 
-            p = new Program('addiu $1, $1, 0x4\nslti $2, $1, 0xffff');
+            p = new Program('addiu $1, $1, 0x4 \n slti $2, $1, 0xffff');
             p.run();
             assert.ok(p.getRegisters()[2] == (0 | 0), "Value is not less than one sign extended immediate");
         });
 
         QUnit.test("sltiu", function(assert) {
-            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0x5');
+            p = new Program('addiu $1, $1, 0x4 \n sltiu $2, $1, 0x5');
             p.run();
             assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than zero sign extended immediate");
 
-            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0x4');
+            p = new Program('addiu $1, $1, 0x4 \n sltiu $2, $1, 0x4');
             p.run();
             assert.ok(p.getRegisters()[2] == (0 | 0), "Value is equal to zero sign extended immediate");
 
-            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0x3');
+            p = new Program('addiu $1, $1, 0x4 \n sltiu $2, $1, 0x3');
             p.run();
             assert.ok(p.getRegisters()[2] == (0 | 0), "Value is not less than zero sign extended immediate");
 
-            p = new Program('addiu $1, $1, 0x4\nsltiu $2, $1, 0xffff');
+            p = new Program('addiu $1, $1, 0x4 \n sltiu $2, $1, 0xffff');
             p.run();
             assert.ok(p.getRegisters()[2] == (1 | 0), "Value is less than one sign extended immediate");
         });
@@ -162,7 +162,7 @@
             p.run();
             assert.ok(p.getRegisters()[0] === 0, "Cannot write to $0 register");
 
-            p = new Program('ori $3, $0, 0x123\nori $5, $0, 0x321\naddu $0, $3, $5');
+            p = new Program('ori $3, $0, 0x123 \n ori $5, $0, 0x321 \n addu $0, $3, $5');
             p.run();
             assert.ok(p.getRegisters()[0] === 0, "Cannot write to $0 register");
         });
@@ -271,6 +271,32 @@
             assert.ok(p.getRegisters()[1] == 10, "Negative branch offset to same instruction");
 
             p = new Program('beq $0, $0, 0x3fffc \n addiu $1, $1, 1'); // program should continously loop, while executing delay slot instruction
+            for (var i = 0; i < 10; ++i) {
+                p.step();
+            }
+            assert.ok(p.getRegisters()[1] == 10, "Negative branch offset to same instruction, with signed offset");
+        });
+
+        QUnit.test("bne", function(assert) {
+            p = new Program('bne $0, $0, 0x8 \n addiu $1, $1, 1 \n ori $5, $5, 0xdead \n ori $4, $4, 0xbabe');
+            p.run();
+            assert.ok(p.getRegisters()[1] == 1, "Condition false: Delay slot instruction is executed");
+            assert.ok(p.getRegisters()[5] == 0xdead, "Condition false: Branch is not taken");
+            assert.ok(p.getRegisters()[4] == 0xbabe , "Condition false: Branched is not taken, all instructions were executed");
+
+            p = new Program('ori $1, $1, 0xbeef \n bne $0, $1, 0x8 \n andi $1, $1, 0 \n ori $5, $5, 0xdead \n ori $4, $4, 0xbabe');
+            p.run();
+            assert.ok(p.getRegisters()[1] == 0, "Condition true: Delay slot instruction is executed, does not affect branch check");
+            assert.ok(p.getRegisters()[5] != 0xdead, "Condition true: Branch is taken");
+            assert.ok(p.getRegisters()[4] == 0xbabe , "Condition true: Branch is taken, following instruction was executed");
+
+            p = new Program('addiu $1, $0, 1 \n bne $0, $1, -4 \n addiu $1, $1, 1'); // program should continously loop, while executing delay slot instruction
+            for (var i = 0; i < 10; ++i) {
+                p.step();
+            }
+            assert.ok(p.getRegisters()[1] == 10, "Negative branch offset to same instruction");
+
+            p = new Program('addiu $1, $0, 1 \n bne $0, $1, 0x3fffc \n addiu $1, $1, 1'); // program should continously loop, while executing delay slot instruction
             for (var i = 0; i < 10; ++i) {
                 p.step();
             }
