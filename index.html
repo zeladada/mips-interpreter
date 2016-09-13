@@ -335,8 +335,8 @@
         function displayMemory() {
             var memory = globalP.getMemory();
             var memoryHTML = "";
-            var memAddress = parseInt(document.getElementById('memory-address').value) || 0;
-            var addr =  memAddress - (memAddress % 4); // keep memory locations as multiples of 4
+            var memAddress = parseInt(document.getElementById('memory-address').value) >>> 0;
+            var addr = memAddress - (memAddress % 4); // keep memory locations as multiple of 4
             if (!memory.isValidAddress(addr)) {
                 memoryHTML = '<tr class="danger"><td>Invalid memory location: ' + sprintf("0x%x", memAddress) + '. Memory addresses must be from 0x00000000 - 0x7fffffff</td><td></td><td></td><td></td></tr>';
             }
@@ -348,7 +348,7 @@
                     var byte2 = memory.getMem(i+1) << 8;
                     var byte3 = memory.getMem(i+2) << 16;
                     var msb = memory.getMem(i+3) << 24;
-                    var memValue = msb + byte3 + byte2 + lsb;
+                    var memValue = msb | byte3 | byte2 | lsb;
                     memoryHTML += (memValue == 0) ? '<tr>' : '<tr class="info">';
                     memoryHTML += sprintf("<td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</td>",
                         i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
