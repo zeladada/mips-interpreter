@@ -249,7 +249,15 @@
             assert.equal(p.getRegisters()[3], (0xfffffff6 | 0), "~(10 | 5) = -10");
         });
 
-        // TODO: verify little endianness
+        QUnit.test("little endianess", function(assert) {
+            p = new Program('lui $31, 0xf1e2 \n ori $31, $31, 0xd3c4 \n sw $31, 0($0)');
+            p.run();
+            assert.equal(p.getMemory().getMem(0x00000000), 0xc4, "lsb check");
+            assert.equal(p.getMemory().getMem(0x00000001), 0xd3, "byte 2 check");
+            assert.equal(p.getMemory().getMem(0x00000002), 0xe2, "byte 3 check");
+            assert.equal(p.getMemory().getMem(0x00000003), 0xf1, "msb check");
+        });
+
         // TODO: verify jump/branches conditions
         QUnit.test("beq", function(assert) {
             p = new Program('beq $0, $0, 0x8 \n addiu $1, $1, 1 \n ori $5, $5, 0xdead \n ori $4, $4, 0xbabe');
