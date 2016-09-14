@@ -45,6 +45,7 @@ class Program {
         this.labels = {};
         this.generateLabels();
         this.linkLabels();
+        this.delaySlotInsnsPC = [];
     }
 
     /** Goes through all the lines and finds the labels and associates pc addresses to them */
@@ -293,6 +294,7 @@ class Program {
                 this.pushError("Misaligned jump target (must be a multiple of 4) [line " + this.line + "]: " + target);
             }
             else {
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 this.pc = newpc;
             }
@@ -315,6 +317,7 @@ class Program {
                 this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4) [line " + this.line + "]: " + newpc);
             }
             else {
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 this.pc = newpc;
             }
@@ -339,6 +342,7 @@ class Program {
                 if (this.registers[rs] == this.registers[rt]) {
                     branch = true;
                 }
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 if (branch) {
                     this.pc = newpc;
@@ -358,6 +362,7 @@ class Program {
                 if (this.registers[rs] != this.registers[rt]) {
                     branch = true;
                 }
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 if (branch) {
                     this.pc = newpc;
@@ -377,6 +382,7 @@ class Program {
                 if (this.registers[rs] < 0) {
                     branch = true;
                 }
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 if (branch) {
                     this.pc = newpc;
@@ -396,6 +402,7 @@ class Program {
                 if (this.registers[rs] <= 0) {
                     branch = true;
                 }
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 if (branch) {
                     this.pc = newpc;
@@ -415,6 +422,7 @@ class Program {
                 if (this.registers[rs] > 0) {
                     branch = true;
                 }
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 if (branch) {
                     this.pc = newpc;
@@ -434,6 +442,7 @@ class Program {
                 if (this.registers[rs] >= 0) {
                     branch = true;
                 }
+                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
                 this.step();
                 if (branch) {
                     this.pc = newpc;

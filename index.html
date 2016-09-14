@@ -249,17 +249,31 @@
 
         document.getElementById('memory-go').addEventListener('click', displayMemory);
 
+        function getRecentInsnsHTML() {
+            var recentInstructionHTML = "";
+            for (var i = 0; i < recentInsns.length; ++i) {
+                // mark the last element as the current instruction executed
+                if (i === recentInsns.length-1) {
+                    recentInstructionHTML += '<span class="current">' + "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + '</span>' + ((recentInsns[i][1]) ? " (Delay Slot)":"");
+                }
+                else {
+                    recentInstructionHTML += "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + ((recentInsns[i][1]) ? " (Delay Slot)":"") + "<br>";
+                }
+            }
+            return recentInstructionHTML;
+        }
+
         function step() {
             if (globalP.pc / 4 < globalP.insns.length) {
                 var currentInsn = globalP.insns[globalP.pc / 4];
-                trackInsn(currentInsn);
-                var recentInstructionHTML = "";
-                for (var i = 0; i < recentInsns.length-1; ++i) {
-                    recentInstructionHTML += "[line " + recentInsns[i][1] + "]: " + recentInsns[i][2] + "<br>";
-                }
-                recentInstructionHTML += '<span class="current">' + "[line " + currentInsn[1] + "]: " + currentInsn[2] + '</span>';
-                document.getElementById('recent-instruction').innerHTML = recentInstructionHTML;
+                trackInsn(currentInsn, false);
+                document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
                 globalP.step();
+                for (var i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
+                    trackInsn(globalP.insns[globalP.delaySlotInsnsPC.shift() / 4], true);
+                    // update the recent instructions with the delay slot instruction
+                    document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+                }
                 displayRegisters();
                 displayMemory();
                 displayErrors();
@@ -313,11 +327,11 @@
             runner = undefined;
         }
 
-        function trackInsn(insn) {
+        function trackInsn(insn, isDelaySlot) {
             if (recentInsns.length >= 4) {
                 recentInsns.shift(); // removes the oldest instruction
             }
-            recentInsns.push(insn);
+            recentInsns.push([insn, isDelaySlot]);
         }
 
         function displayRegisters() {
