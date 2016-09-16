@@ -270,8 +270,11 @@
                 document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
                 globalP.step();
                 for (var i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
-                    trackInsn(globalP.insns[globalP.delaySlotInsnsPC.shift() / 4], true);
+                    var delaySlotInsn = globalP.insns[globalP.delaySlotInsnsPC.shift() / 4];
                     // update the recent instructions with the delay slot instruction
+                    if (delaySlotInsn !== undefined) {
+                        trackInsn(delaySlotInsn, true);
+                    }
                     document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
                 }
             }

@@ -163,6 +163,11 @@ class Program {
         return offset;
     }
 
+    /** Verifies that a pc is valid */
+    verifyPC(pc) {
+        return (0 <= pc / 4 && pc / 4 < this.insns.length && pc % 4 == 0);
+    }
+
     /** Verifies that there is another delay slot in progress */
     verifyDelaySlot() {
         if (this.delaySlot) {
@@ -290,8 +295,8 @@ class Program {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
             var newpc = (this.pc & 0xf0000000) + target; // pc already points to instruction in delay slot
-            if (newpc % 4 !== 0) {
-                this.pushError("Misaligned jump target (must be a multiple of 4) [line " + this.line + "]: " + target);
+            if (!this.verifyPC(newpc)) {
+                this.pushError("Misaligned jump target (must be a multiple of 4 and in program range) [line " + this.line + "]: " + target);
             }
             else {
                 this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
@@ -313,8 +318,8 @@ class Program {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
             var newpc = this.registers[rs] >>> 0;
-            if (newpc % 4 !== 0) {
-                this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4) [line " + this.line + "]: " + newpc);
+            if (!this.verifyPC(newpc)) {
+                this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4 and in program range) [line " + this.line + "]: " + newpc);
             }
             else {
                 this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
@@ -338,14 +343,19 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                var branch = false;
-                if (this.registers[rs] == this.registers[rt]) {
-                    branch = true;
+                if (!this.verifyPC(newpc)) {
+                    this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
-                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
-                this.step();
-                if (branch) {
-                    this.pc = newpc;
+                else {
+                    var branch = false;
+                    if (this.registers[rs] == this.registers[rt]) {
+                        branch = true;
+                    }
+                    this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
+                    this.step();
+                    if (branch) {
+                        this.pc = newpc;
+                    }
                 }
                 this.delaySlot = false;
             }
@@ -358,14 +368,19 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                var branch = false;
-                if (this.registers[rs] != this.registers[rt]) {
-                    branch = true;
+                if (!this.verifyPC(newpc)) {
+                    this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
-                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
-                this.step();
-                if (branch) {
-                    this.pc = newpc;
+                else {
+                    var branch = false;
+                    if (this.registers[rs] != this.registers[rt]) {
+                        branch = true;
+                    }
+                    this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
+                    this.step();
+                    if (branch) {
+                        this.pc = newpc;
+                    }
                 }
                 this.delaySlot = false;
             }
@@ -378,14 +393,19 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                var branch = false;
-                if (this.registers[rs] < 0) {
-                    branch = true;
+                if (!this.verifyPC(newpc)) {
+                    this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
-                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
-                this.step();
-                if (branch) {
-                    this.pc = newpc;
+                else {
+                    var branch = false;
+                    if (this.registers[rs] < 0) {
+                        branch = true;
+                    }
+                    this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
+                    this.step();
+                    if (branch) {
+                        this.pc = newpc;
+                    }
                 }
                 this.delaySlot = false;
             }
@@ -398,14 +418,19 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                var branch = false;
-                if (this.registers[rs] <= 0) {
-                    branch = true;
+                if (!this.verifyPC(newpc)) {
+                    this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
-                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
-                this.step();
-                if (branch) {
-                    this.pc = newpc;
+                else {
+                    var branch = false;
+                    if (this.registers[rs] <= 0) {
+                        branch = true;
+                    }
+                    this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
+                    this.step();
+                    if (branch) {
+                        this.pc = newpc;
+                    }
                 }
                 this.delaySlot = false;
             }
@@ -418,14 +443,19 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                var branch = false;
-                if (this.registers[rs] > 0) {
-                    branch = true;
+                if (!this.verifyPC(newpc)) {
+                    this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
-                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
-                this.step();
-                if (branch) {
-                    this.pc = newpc;
+                else {
+                    var branch = false;
+                    if (this.registers[rs] > 0) {
+                        branch = true;
+                    }
+                    this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
+                    this.step();
+                    if (branch) {
+                        this.pc = newpc;
+                    }
                 }
                 this.delaySlot = false;
             }
@@ -438,14 +468,19 @@ class Program {
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
                 var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                var branch = false;
-                if (this.registers[rs] >= 0) {
-                    branch = true;
+                if (!this.verifyPC(newpc)) {
+                    this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
-                this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
-                this.step();
-                if (branch) {
-                    this.pc = newpc;
+                else {
+                    var branch = false;
+                    if (this.registers[rs] >= 0) {
+                        branch = true;
+                    }
+                    this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
+                    this.step();
+                    if (branch) {
+                        this.pc = newpc;
+                    }
                 }
                 this.delaySlot = false;
             }
@@ -621,7 +656,7 @@ class Program {
     }
 
     step() {
-        if (this.pc / 4 >= this.insns.length || this.pc % 4 != 0) {
+        if (!this.verifyPC(this.pc)) {
             console.log("PC is invalid!! PC = " + this.pc);
             return;
         }
