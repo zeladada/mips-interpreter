@@ -274,9 +274,6 @@
                     // update the recent instructions with the delay slot instruction
                     document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
                 }
-                displayRegisters();
-                displayMemory();
-                displayErrors();
             }
             else {
                 if (!programTerminated) {
@@ -284,6 +281,9 @@
                     document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
                 }
             }
+            displayRegisters();
+            displayMemory();
+            displayErrors();
         }
 
         function stepWithBreakpoint() {
