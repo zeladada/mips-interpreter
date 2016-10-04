@@ -165,7 +165,7 @@ class Program {
 
     /** Verifies that a pc is valid */
     verifyPC(pc) {
-        return (0 <= pc / 4 && pc / 4 < this.insns.length && pc % 4 == 0);
+        return (0 <= pc / 4 && pc % 4 == 0);
     }
 
     /** Verifies that there is another delay slot in progress */
@@ -656,7 +656,7 @@ class Program {
     }
 
     step() {
-        if (!this.verifyPC(this.pc)) {
+        if (!this.verifyPC(this.pc) || this.pc / 4 >= this.insns.length ) {
             console.log("PC is invalid!! PC = " + this.pc);
             return;
         }
