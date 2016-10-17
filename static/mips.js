@@ -489,6 +489,9 @@ class Program {
 
     lw(rt, offset, base) {
         var loc = offset + this.registers[base];
+        if (loc % 4 != 0 ) {
+            this.pushError("Address Error: loading from non-aligned word [line " + this.line + "]: " + loc);
+        }
         this.verifyMemory(loc, loc+3);
         var lsb = this.memory.getMem(loc);
         var byte2 = this.memory.getMem(loc+1) << 8;
@@ -516,6 +519,9 @@ class Program {
     sw(rt, offset, base) {
         var registerValue = this.registers[rt];
         var loc = offset + this.registers[base];
+        if (loc % 4 != 0 ) {
+            this.pushError("Address Error: storing to non-aligned word [line " + this.line + "]: " + loc);
+        }
         this.verifyMemory(loc, loc+3);
         this.memory.setMem(loc, registerValue & 0x000000ff);
         this.memory.setMem(loc+1, (registerValue >>> 8) & 0x000000ff);
