@@ -332,6 +332,9 @@ class Program {
 
     jalr(rd, rs) {
         if (!this.verifyDelaySlot()) { // only change $ra if this is not a delay slot instruction
+            if (rd === rs) {
+                this.pushError("jalr instruction cannot have the same values for rs and rd [line " + this.line + "]");
+            }
             this.registers[rd] = this.pc + 4; // pc was already incremented by 4, so $ra is pc + 8 (second instruction after jump)
             this.jr(rs);
         }
