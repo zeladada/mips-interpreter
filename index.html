@@ -83,6 +83,7 @@
                     <table class="table table-hover table-condensed">
                         <thead>
                             <tr>
+                                <th>Init Value</th>
                                 <th>Register</th>
                                 <th>Decimal</th>
                                 <th>Hex</th>
@@ -90,38 +91,38 @@
                             </tr>
                         </thead>
                         <tbody id="registers">
-                            <tr><td>$0 ($zero)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$1 ($at)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$2 ($v0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$3 ($v1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$4 ($a0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$5 ($a1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$6 ($a2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$7 ($a3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$8 ($t0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$9 ($t1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$10 ($t2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$11 ($t3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$12 ($t4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$13 ($t5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$14 ($t6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$15 ($t7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$16 ($s0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$17 ($s1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$18 ($s2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$19 ($s3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$20 ($s4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$21 ($s5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$22 ($s6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$23 ($s7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$24 ($t8)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$25 ($t9)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$26 ($k0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$27 ($k1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$28 ($gp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$29 ($sp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$30 ($fp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td>$31 ($ra)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td>0</td><td>$0 ($zero)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$1 ($at)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$2 ($v0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$3 ($v1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$4 ($a0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$5 ($a1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$6 ($a2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$7 ($a3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$8 ($t0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$9 ($t1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$10 ($t2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$11 ($t3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$12 ($t4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$13 ($t5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$14 ($t6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$15 ($t7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$16 ($s0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$17 ($s1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$18 ($s2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$19 ($s3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$20 ($s4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$21 ($s5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$22 ($s6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$23 ($s7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$24 ($t8)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$25 ($t9)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$26 ($k0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$27 ($k1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$28 ($gp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$29 ($sp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$30 ($fp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                            <tr><td><input class="init-value" type="text" value="0"></td><td>$31 ($ra)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -187,6 +188,7 @@
     <script>
         "use strict";
         var globalP = new Program();
+        var initialRegisters = new Int32Array(32);
         var recentInsns = [];
         var runner = undefined;
         var programTerminated = true;
@@ -206,8 +208,8 @@
             clearAlerts(); // Clear any previous warnings/errors
             programTerminated = false;
             var code = document.getElementById('code').value;
-            var p = new Program(code);
-            globalP = p;
+            globalP = new Program(code);
+            initializeRegisters(globalP);
             recentInsns = [];
             displayRegisters();
             displayMemory();
@@ -339,10 +341,11 @@
 
         function displayRegisters() {
             var registers = globalP.getRegisters();
-            var registersHTML = "";
-            for (var i = 0; i < 32; ++i) {
-                registersHTML += sprintf("<tr><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>",
-                    i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
+            var registersHTML = sprintf('<tr><td>%d</td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
+                registers[0], 0, getRegisterSyntacticSugar(0), registers[0], registers[0] >>> 0, (registers[i] >>> 0).toString(2));
+            for (var i = 1; i < 32; ++i) {
+                registersHTML += sprintf('<tr><td><input class="init-value" type="text" value="%d"></td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
+                    initialRegisters[i], i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
             }
             if (registersHTML != document.getElementById('registers').innerHTML) {
                 document.getElementById('registers').innerHTML = registersHTML;
@@ -392,6 +395,18 @@
             document.getElementById('errors-container').style.display = "none";
         }
 
+        function initializeRegisters(program) {
+            initialRegisters = new Int32Array(32);
+            var initDOM = document.getElementById('registers').getElementsByClassName('init-value');
+            initialRegisters[0] = 0; // zero register is hard-wired to 0
+            for (var i = 1; i < 32; i++) {
+                var value = parseInt(initDOM[i-1].value) >> 0;
+                initialRegisters[i] = value;
+            }
+            program.registers = initialRegisters.slice();
+        }
+
+        // TODO: use array indexing for this
         function getRegisterSyntacticSugar(registerNo) {
             switch(registerNo) {
                 case 0:
