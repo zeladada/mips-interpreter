@@ -22,6 +22,7 @@
  *   });
  *
  * History:
+ *   - 2017.02.27: Fixed lag associated with adding many lines at once
  *   - 2010.01.08: Fixed a Google Chrome layout problem
  *   - 2010.01.07: Refactored code for speed/readability; Fixed horizontal sizing
  *   - 2010.01.06: Initial Release
@@ -39,13 +40,26 @@
          * kept up to the current system
          */
         var fillOutLines = function(codeLines, h, lineNo){
-            while ( (codeLines.height() - h ) <= 0 ){
+            if (codeLines.height() <= h) {
+                var tempLineNo = [];
+                var prevcodeLinesHeight = codeLines.height();
                 if ( lineNo == opts.selectedLine )
                     codeLines.append("<div class='lineno lineselect'>" + lineNo + "</div>");
                 else
                     codeLines.append("<div class='lineno'>" + lineNo + "</div>");
-
                 lineNo++;
+
+                var oneCodeLineHeight = codeLines.height() - prevcodeLinesHeight;
+                var linesToAdd = (h - codeLines.height()) / oneCodeLineHeight;
+                for (var i = 0; i < linesToAdd; i++) {
+                    if ( lineNo == opts.selectedLine )
+                        tempLineNo.push("<div class='lineno lineselect'>" + lineNo + "</div>");
+                    else
+                        tempLineNo.push("<div class='lineno'>" + lineNo + "</div>");
+
+                    lineNo++;
+                }
+                codeLines.append(tempLineNo);
             }
             return lineNo;
         };
@@ -77,7 +91,7 @@
             var codeLinesDiv	= linesDiv.find(".codelines");
             lineNo = fillOutLines( codeLinesDiv, linesDiv.height(), 1 );
 
-            /* Move the textarea to the selected line */ 
+            /* Move the textarea to the selected line */
             if ( opts.selectedLine != -1 && !isNaN(opts.selectedLine) ){
                 var fontSize = parseInt( textarea.height() / (lineNo-2) );
                 var position = parseInt( fontSize * opts.selectedLine ) - (textarea.height()/2);
