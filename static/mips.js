@@ -46,6 +46,8 @@ class Program {
         this.generateLabels();
         this.linkLabels();
         this.delaySlotInsnsPC = [];
+        this.TOKEN_TYPE_REG = 0;
+        this.TOKEN_TYPE_IMM = 1;
     }
 
     /** Goes through all the lines and finds the labels and associates pc addresses to them */
@@ -538,12 +540,20 @@ class Program {
         this.memory.setMem(loc, this.registers[rt] & 0x000000ff);
     }
 
-    verifyTokenCount(tokens, count, format) {
-        if (tokens.length < count) {
+    /* Checks that the instruction has the correct number and type of arguments
+     * NOTE: Strips type information from the type-annotated tokens array */
+    verifyTokenTypes(tokens, types, format) {
+        if (tokens.length < types.length) {
             this.pushError("Too few arguments [line " + this.line + "] for '" + format + "'");
         }
-        if (tokens.length > count) {
-            this.pushError("Extra arguments [line " + this.line + "] for '" + format + "': " + tokens.slice(count, tokens.length).join(', '));
+        if (tokens.length > types.length) {
+            this.pushError("Extra arguments [line " + this.line + "] for '" + format + "': " + tokens.slice(types.length, tokens.length).join(', '));
+        }
+        for (var i = 0; i < tokens.length; ++i) {
+            if (tokens[i].type !== types[i]) {
+                this.pushError("Incorrect argument type [line " + this.line + "] for '" + format + "'");
+            }
+            tokens[i] = tokens[i].value;
         }
     }
 
@@ -652,16 +662,19 @@ class Program {
 
     parseToken(tok) {
         var value;
+        var type;
         if (tok.charAt(0) == '$') {
             value = this.parseRegister(tok);
+            type = this.TOKEN_TYPE_REG;
         }
         else {
             value = parseInt(tok);
+            type = this.TOKEN_TYPE_IMM;
             if (value === undefined) {
                 this.pushError("Unknown value [line " + this.line + "]: " + tok);
             }
         }
-        return value;
+        return {value: value, type: type};
     }
 
     step() {
@@ -696,158 +709,158 @@ class Program {
             }
             switch(op.toLowerCase()) {
                 case "addiu":
-                    this.verifyTokenCount(tokens, 3, "addiu $rt, $rs, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "addiu $rt, $rs, immediate");
                     this.addiu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "andi":
-                    this.verifyTokenCount(tokens, 3, "andi $rt, $rs, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "andi $rt, $rs, immediate");
                     this.andi(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "ori":
-                    this.verifyTokenCount(tokens, 3, "ori $rt, $rs, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "ori $rt, $rs, immediate");
                     this.ori(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "xori":
-                    this.verifyTokenCount(tokens, 3, "xori $rt, $rs, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "xori $rt, $rs, immediate");
                     this.xori(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "slti":
-                    this.verifyTokenCount(tokens, 3, "slti $rt, $rs, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "slti $rt, $rs, immediate");
                     this.slti(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sltiu":
-                    this.verifyTokenCount(tokens, 3, "sltiu $rt, $rs, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "sltiu $rt, $rs, immediate");
                     this.sltiu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "addu":
-                    this.verifyTokenCount(tokens, 3, "addu $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "addu $rd, $rs, $rt");
                     this.addu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "subu":
-                    this.verifyTokenCount(tokens, 3, "subu $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "subu $rd, $rs, $rt");
                     this.subu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "and":
-                    this.verifyTokenCount(tokens, 3, "and $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "and $rd, $rs, $rt");
                     this.and(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "or":
-                    this.verifyTokenCount(tokens, 3, "or $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "or $rd, $rs, $rt");
                     this.or(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "xor":
-                    this.verifyTokenCount(tokens, 3, "xor $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "xor $rd, $rs, $rt");
                     this.xor(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "nor":
-                    this.verifyTokenCount(tokens, 3, "nor $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "nor $rd, $rs, $rt");
                     this.nor(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "slt":
-                    this.verifyTokenCount(tokens, 3, "slt $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "slt $rd, $rs, $rt");
                     this.slt(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sltu":
-                    this.verifyTokenCount(tokens, 3, "sltu $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "sltu $rd, $rs, $rt");
                     this.sltu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "movn":
-                    this.verifyTokenCount(tokens, 3, "movn $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "movn $rd, $rs, $rt");
                     this.movn(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "movz":
-                    this.verifyTokenCount(tokens, 3, "movz $rd, $rs, $rt");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "movz $rd, $rs, $rt");
                     this.movz(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sll":
-                    this.verifyTokenCount(tokens, 3, "sll $rd, $rt, sa");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "sll $rd, $rt, sa");
                     this.sll(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "srl":
-                    this.verifyTokenCount(tokens, 3, "srl $rd, $rt, sa");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "srl $rd, $rt, sa");
                     this.srl(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sra":
-                    this.verifyTokenCount(tokens, 3, "sra $rd, $rt, sa");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "sra $rd, $rt, sa");
                     this.sra(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sllv":
-                    this.verifyTokenCount(tokens, 3, "sllv $rd, $rt, $rs");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "sllv $rd, $rt, $rs");
                     this.sllv(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "srlv":
-                    this.verifyTokenCount(tokens, 3, "srlv $rd, $rt, $rs");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "srlv $rd, $rt, $rs");
                     this.srlv(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "srav":
-                    this.verifyTokenCount(tokens, 3, "srav $rd, $rt, $rs");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "srav $rd, $rt, $rs");
                     this.srav(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lui":
-                    this.verifyTokenCount(tokens, 2, "lui $rt, immediate");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "lui $rt, immediate");
                     this.lui(tokens[0], tokens[1]);
                     break;
                 case "j":
-                    this.verifyTokenCount(tokens, 1, "j target");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_IMM], "j target");
                     this.j(tokens[0]);
                     break;
                 case "jr":
-                    this.verifyTokenCount(tokens, 1, "jr $rs");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG], "jr $rs");
                     this.jr(tokens[0]);
                     break;
                 case "jal":
-                    this.verifyTokenCount(tokens, 1, "jal target");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_IMM], "jal target");
                     this.jal(tokens[0]);
                     break;
                 case "jalr":
                     if (tokens.length == 1) {
-                        tokens.unshift(31); // use $31 as $rd
+                        tokens.unshift({value: 31, type: this.TOKEN_TYPE_REG}); // use $31 as $rd
                     }
-                    this.verifyTokenCount(tokens, 2, "jalr $rd, $rs");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "jalr $rd, $rs");
                     this.jalr(tokens[0], tokens[1]);
                     break;
                 case "beq":
-                    this.verifyTokenCount(tokens, 3, "beq $rs, $rt, offset");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "beq $rs, $rt, offset");
                     this.beq(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "bne":
-                    this.verifyTokenCount(tokens, 3, "bne $rs, $rt, offset");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "bne $rs, $rt, offset");
                     this.bne(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "bltz":
-                    this.verifyTokenCount(tokens, 2, "bltz $rs, offset");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "bltz $rs, offset");
                     this.bltz(tokens[0], tokens[1]);
                     break;
                 case "blez":
-                    this.verifyTokenCount(tokens, 2, "blez $rs, offset");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "blez $rs, offset");
                     this.blez(tokens[0], tokens[1]);
                     break;
                 case "bgtz":
-                    this.verifyTokenCount(tokens, 2, "bgtz $rs, offset");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "bgtz $rs, offset");
                     this.bgtz(tokens[0], tokens[1]);
                     break;
                 case "bgez":
-                    this.verifyTokenCount(tokens, 2, "bgez $rs, offset");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "bgez $rs, offset");
                     this.bgez(tokens[0], tokens[1]);
                     break;
                 case "lw":
-                    this.verifyTokenCount(tokens, 3, "lw $rt, offset(base $rs)");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM, this.TOKEN_TYPE_REG], "lw $rt, offset(base $rs)");
                     this.lw(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lb":
-                    this.verifyTokenCount(tokens, 3, "lb $rt, offset(base $rs)");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM, this.TOKEN_TYPE_REG], "lb $rt, offset(base $rs)");
                     this.lb(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lbu":
-                    this.verifyTokenCount(tokens, 3, "lbu $rt, offset(base $rs)");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM, this.TOKEN_TYPE_REG], "lbu $rt, offset(base $rs)");
                     this.lbu(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sw":
-                    this.verifyTokenCount(tokens, 3, "sw $rt, offset(base $rs)");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM, this.TOKEN_TYPE_REG], "sw $rt, offset(base $rs)");
                     this.sw(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "sb":
-                    this.verifyTokenCount(tokens, 3, "sb $rt, offset(base $rs)");
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM, this.TOKEN_TYPE_REG], "sb $rt, offset(base $rs)");
                     this.sb(tokens[0], tokens[1], tokens[2]);
                     break;
                 default:
