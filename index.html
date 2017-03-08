@@ -333,7 +333,7 @@
         }
 
         function trackInsn(insn, isDelaySlot) {
-            if (recentInsns.length >= 4) {
+            if (recentInsns.length >= 5) {
                 recentInsns.shift(); // removes the oldest instruction
             }
             recentInsns.push([insn, isDelaySlot]);
