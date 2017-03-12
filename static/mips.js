@@ -85,7 +85,7 @@ class Program {
             var insn = this.insns[i][0];
             var lineNo = this.insns[i][1];
             if (insn.indexOf(' ') != -1) { // ignore changing labels of bad instructions
-                var op = insn.substring(0, insn.indexOf(' ')).toLowerCase();
+                var op = insn.substring(0, insn.indexOf(' ')).trim().toLowerCase();
                 var tokens = insn.substring(insn.indexOf(' '), insn.length).split(',');
                 var label = tokens[tokens.length-1].trim(); // label comes at the very end
                 if (op == "j" || op == "jal") {
@@ -707,7 +707,7 @@ class Program {
                 }
                 tokensIndex++;
             }
-            switch(op.toLowerCase()) {
+            switch(op.trim().toLowerCase()) {
                 case "addiu":
                     this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "addiu $rt, $rs, immediate");
                     this.addiu(tokens[0], tokens[1], tokens[2]);
