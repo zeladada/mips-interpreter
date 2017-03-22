@@ -53,7 +53,7 @@ function downloadAllMemory() {
         }
     }
     if (fileString == "v2.0 raw\n") {
-        fileString = "0";
+        fileString = "v2.0 raw\n0";
     }
     return fileString.trim();
 }
