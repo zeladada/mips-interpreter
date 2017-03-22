@@ -137,6 +137,7 @@
                         <input type="text" id="memory-address" class="form-control" placeholder="0x00000000" value="0x00000000">
                     </div>
                     <button id="memory-go" class="btn btn-primary">Go</button>
+                    <button id="memory-download" class="btn btn-primary">Download!</button>
                 </div>
                 <br>
                 <div id="memory-table" class="table-responsive">
@@ -171,6 +172,7 @@
     <script src="static/jquery-linedtextarea.js"></script>
     <script src="static/bootstrap.min.js"></script>
     <script src="static/mips.js"></script>
+    <script src="static/FileSaver.js"></script>
     <script>
         $('#code').linedtextarea();
         $('.codelines').on('click', '.lineno', function() {
@@ -479,4 +481,5 @@
             return undefined; // no syntactic sugar
         }
     </script>
+    <script src="./plugin.js"></script>
 </body>
