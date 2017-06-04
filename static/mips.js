@@ -1,6 +1,14 @@
 "use strict";
 
-// TODO: Use function class definition fallback since classes support is ECMAScript 6
+// TODO: directives support
+// TODO: instr LA, LI, ADD, ADDI
+// TODO: syscall support: 1-12, 32, 41 - 44
+// TODO: highlight currently running line, remove print?
+// TODO: 1 bit MMIO framebuffer
+// TODO: update every {1, 2, 4, 8, 16, 32, 64, 128, 256} input
+// TODO: 320x200 default, size input, unit size?
+// TODO: display base addr 0xXXXXXXXX input, 0xffffffff - 320x200 default
+// TODO: resize editor box
 
 /* Memory is implemented using a hashmap of addresses to 8-bit unsigned values */
 class Memory {
@@ -23,7 +31,7 @@ class Memory {
         this.memory[address] = value;
     }
 
-    isValidAddress(address) {
+    static isValidAddress(address) {
         address = address >>> 0;
         return 0 <= address && address <= 0x7fffffff;
     }
@@ -52,16 +60,16 @@ class Program {
 
     /** Goes through all the lines and finds the labels and associates pc addresses to them */
     generateLabels() {
-        var filteredInstructions = [];
-        var filteredIndex = 0;
-        for (var i = 0; i < this.insns.length; ++i) {
-            var lineNo = i + 1;
-            var insn = this.insns[i];
+        const filteredInstructions = [];
+        let filteredIndex = 0;
+        for (let i = 0; i < this.insns.length; ++i) {
+            const lineNo = i + 1;
+            let insn = this.insns[i];
             if (insn.indexOf('#') != -1) { // remove everything after a comment
                 insn = insn.substring(0, insn.indexOf('#')).trim();
             }
             if (insn.charAt(insn.length-1) == ':') { // encounter a label which ends with a colon
-                var label = insn.substring(0, insn.length-1);
+                const label = insn.substring(0, insn.length - 1);
                 if (this.labels[label] !== undefined) {
                     this.pushError("Found multiple instances of label: " + label + " [line " + lineNo + "]");
                 }
@@ -81,13 +89,13 @@ class Program {
 
     /** Converts labels to memory locations */
     linkLabels() {
-        for (var i = 0; i < this.insns.length; ++i) {
-            var insn = this.insns[i][0];
-            var lineNo = this.insns[i][1];
+        for (let i = 0; i < this.insns.length; ++i) {
+            const insn = this.insns[i][0];
+            const lineNo = this.insns[i][1];
             if (insn.indexOf(' ') != -1) { // ignore changing labels of bad instructions
-                var op = insn.substring(0, insn.indexOf(' ')).trim().toLowerCase();
-                var tokens = insn.substring(insn.indexOf(' '), insn.length).split(',');
-                var label = tokens[tokens.length-1].trim(); // label comes at the very end
+                const op = insn.substring(0, insn.indexOf(' ')).trim().toLowerCase();
+                const tokens = insn.substring(insn.indexOf(' '), insn.length).split(',');
+                const label = tokens[tokens.length - 1].trim(); // label comes at the very end
                 if (op == "j" || op == "jal") {
                     if (this.labels[label] !== undefined) {
                         tokens[tokens.length-1] = (this.labels[label]) << 2; // absolute jump to the label location
@@ -141,7 +149,7 @@ class Program {
     }
 
     /** Sign extends a 16-bit immediate if needed */
-    immPad(imm) {
+    static immPad(imm) {
         if ((imm & 0x8000) == 0x8000) { // check that 15th bit is 1
             imm |= 0xffff0000; // sign extend 16 bits to 32 bits
         }
@@ -158,7 +166,7 @@ class Program {
     }
 
     /** Sign extends an 18-bit offset if needed */
-    offsetPad(offset) {
+    static offsetPad(offset) {
         if ((offset & 0x20000) == 0x20000) { // check that 17th bit is 1
             offset |= 0xfffc0000; // sign extend 18 bits to 32 bits
         }
@@ -166,14 +174,15 @@ class Program {
     }
 
     /** Verifies that a pc is valid */
-    verifyPC(pc) {
+    static verifyPC(pc) {
         return (0 <= pc / 4 && pc % 4 == 0);
     }
 
     /** Verifies that there is another delay slot in progress */
     verifyDelaySlot() {
         if (this.delaySlot) {
-            this.pushError("Cannot have a jump/branch instruction in delay slot! [line " + this.line + "]. Ignoring jump/branch in delay slot.");
+            this.pushError("Cannot have a jump/branch instruction in delay slot! [line "
+                + this.line + "]. Ignoring jump/branch in delay slot.");
             return true;
         }
         return false;
@@ -181,7 +190,7 @@ class Program {
 
     /** Verifies a memory range from loc1 -> loc2 */
     verifyMemory(loc1, loc2) {
-        if (!this.memory.isValidAddress(loc1) || !this.memory.isValidAddress(loc2)) {
+        if (!Memory.isValidAddress(loc1) || !Memory.isValidAddress(loc2)) {
             this.pushError("Invalid memory location [line " + this.line + "]: " + (loc1 >>> 0) +
                     ((loc2 === undefined) ? "" : " to " + (loc2 >>> 0)));
         }
@@ -189,7 +198,7 @@ class Program {
 
     addiu(rt, rs, imm) {
         imm = this.normalizeImm(imm);
-        imm = this.immPad(imm);
+        imm = Program.immPad(imm);
         this.registers[rt] = this.registers[rs] + imm;
     }
 
@@ -210,13 +219,13 @@ class Program {
 
     slti(rt, rs, imm) {
         imm = this.normalizeImm(imm);
-        imm = this.immPad(imm);
+        imm = Program.immPad(imm);
         this.registers[rt] = (this.registers[rs] < imm) ? 1 : 0;
     }
 
     sltiu(rt, rs, imm) {
         imm = this.normalizeImm(imm);
-        imm = this.immPad(imm);
+        imm = Program.immPad(imm);
         this.registers[rt] = ( (this.registers[rs] >>> 0) < (imm >>> 0) ) ? 1 : 0;
     }
 
@@ -296,9 +305,10 @@ class Program {
     j(target) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
-            var newpc = (this.pc & 0xf0000000) + target; // pc already points to instruction in delay slot
-            if (!this.verifyPC(newpc)) {
-                this.pushError("Misaligned jump target (must be a multiple of 4 and in program range) [line " + this.line + "]: " + target);
+            const newpc = (this.pc & 0xf0000000) + target; // pc already points to instruction in delay slot
+            if (!Program.verifyPC(newpc)) {
+                this.pushError("Misaligned jump target (must be a multiple of 4 and in program range) " +
+                    "[line " + this.line + "]: " + target);
             }
             else {
                 this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
@@ -319,9 +329,10 @@ class Program {
     jr(rs) {
         if (!this.verifyDelaySlot()) { // only execute jump if this is not a delay slot instruction
             this.delaySlot = true;
-            var newpc = this.registers[rs] >>> 0;
-            if (!this.verifyPC(newpc)) {
-                this.pushError("Bad PC value to jump to for register " + rs + " (must be a multiple of 4 and in program range) [line " + this.line + "]: " + newpc);
+            const newpc = this.registers[rs] >>> 0;
+            if (!Program.verifyPC(newpc)) {
+                this.pushError("Bad PC value to jump to for register " + rs +
+                    " (must be a multiple of 4 and in program range) [line " + this.line + "]: " + newpc);
             }
             else {
                 this.delaySlotInsnsPC.push(this.pc); // note that a delay slot was executed for the client view
@@ -344,15 +355,15 @@ class Program {
 
     beq(rs, rt, offset) {
         if (this.verifyOffset(offset)) {
-            offset = this.offsetPad(offset);
+            offset = Program.offsetPad(offset);
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
-                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                if (!this.verifyPC(newpc)) {
+                const newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                if (!Program.verifyPC(newpc)) {
                     this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
                 else {
-                    var branch = false;
+                    let branch = false;
                     if (this.registers[rs] == this.registers[rt]) {
                         branch = true;
                     }
@@ -369,15 +380,15 @@ class Program {
 
     bne(rs, rt, offset) {
         if (this.verifyOffset(offset)) {
-            offset = this.offsetPad(offset);
+            offset = Program.offsetPad(offset);
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
-                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                if (!this.verifyPC(newpc)) {
+                const newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                if (!Program.verifyPC(newpc)) {
                     this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
                 else {
-                    var branch = false;
+                    let branch = false;
                     if (this.registers[rs] != this.registers[rt]) {
                         branch = true;
                     }
@@ -394,15 +405,15 @@ class Program {
 
     bltz(rs, offset) {
         if (this.verifyOffset(offset)) {
-            offset = this.offsetPad(offset);
+            offset = Program.offsetPad(offset);
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
-                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                if (!this.verifyPC(newpc)) {
+                const newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                if (!Program.verifyPC(newpc)) {
                     this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
                 else {
-                    var branch = false;
+                    let branch = false;
                     if (this.registers[rs] < 0) {
                         branch = true;
                     }
@@ -419,15 +430,15 @@ class Program {
 
     blez(rs, offset) {
         if (this.verifyOffset(offset)) {
-            offset = this.offsetPad(offset);
+            offset = Program.offsetPad(offset);
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
-                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                if (!this.verifyPC(newpc)) {
+                const newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                if (!Program.verifyPC(newpc)) {
                     this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
                 else {
-                    var branch = false;
+                    let branch = false;
                     if (this.registers[rs] <= 0) {
                         branch = true;
                     }
@@ -444,15 +455,15 @@ class Program {
 
     bgtz(rs, offset) {
         if (this.verifyOffset(offset)) {
-            offset = this.offsetPad(offset);
+            offset = Program.offsetPad(offset);
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
-                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                if (!this.verifyPC(newpc)) {
+                const newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                if (!Program.verifyPC(newpc)) {
                     this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
                 else {
-                    var branch = false;
+                    let branch = false;
                     if (this.registers[rs] > 0) {
                         branch = true;
                     }
@@ -469,15 +480,15 @@ class Program {
 
     bgez(rs, offset) {
         if (this.verifyOffset(offset)) {
-            offset = this.offsetPad(offset);
+            offset = Program.offsetPad(offset);
             if (!this.verifyDelaySlot()) {
                 this.delaySlot = true;
-                var newpc = this.pc + offset; // pc branches relative to instruction in delay slot
-                if (!this.verifyPC(newpc)) {
+                const newpc = this.pc + offset; // pc branches relative to instruction in delay slot
+                if (!Program.verifyPC(newpc)) {
                     this.pushError("Bad branch offset (must be in program range) [line " + this.line + "]: " + offset);
                 }
                 else {
-                    var branch = false;
+                    let branch = false;
                     if (this.registers[rs] >= 0) {
                         branch = true;
                     }
@@ -492,23 +503,27 @@ class Program {
         }
     }
 
+    la(rt, address) {
+        this.registers[rt] = address;
+    }
+
     lw(rt, offset, base) {
-        var loc = offset + this.registers[base];
+        const loc = offset + this.registers[base];
         if (loc % 4 != 0 ) {
             this.pushError("Address Error: loading from non-aligned word [line " + this.line + "]: " + loc);
         }
         this.verifyMemory(loc, loc+3);
-        var lsb = this.memory.getMem(loc);
-        var byte2 = this.memory.getMem(loc+1) << 8;
-        var byte3 = this.memory.getMem(loc+2) << 16;
-        var msb = this.memory.getMem(loc+3) << 24;
+        const lsb = this.memory.getMem(loc);
+        const byte2 = this.memory.getMem(loc + 1) << 8;
+        const byte3 = this.memory.getMem(loc + 2) << 16;
+        const msb = this.memory.getMem(loc + 3) << 24;
         this.registers[rt] = msb + byte3 + byte2 + lsb;
     }
 
     lb(rt, offset, base) {
-        var loc = offset + this.registers[base];
+        const loc = offset + this.registers[base];
         this.verifyMemory(loc);
-        var byteValue = this.memory.getMem(loc);
+        let byteValue = this.memory.getMem(loc);
         if ((byteValue & 0x80) == 0x80) { // sign extend 8-bit -> 32-bit
             byteValue |= 0xffffff00;
         }
@@ -516,14 +531,14 @@ class Program {
     }
 
     lbu(rt, offset, base) {
-        var loc = offset + this.registers[base];
+        const loc = offset + this.registers[base];
         this.verifyMemory(loc);
         this.registers[rt] = this.memory.getMem(loc);
     }
 
     sw(rt, offset, base) {
-        var registerValue = this.registers[rt];
-        var loc = offset + this.registers[base];
+        const registerValue = this.registers[rt];
+        const loc = offset + this.registers[base];
         if (loc % 4 != 0 ) {
             this.pushError("Address Error: storing to non-aligned word [line " + this.line + "]: " + loc);
         }
@@ -535,7 +550,7 @@ class Program {
     }
 
     sb(rt, offset, base) {
-        var loc = offset + this.registers[base];
+        const loc = offset + this.registers[base];
         this.verifyMemory(loc);
         this.memory.setMem(loc, this.registers[rt] & 0x000000ff);
     }
@@ -547,9 +562,10 @@ class Program {
             this.pushError("Too few arguments [line " + this.line + "] for '" + format + "'");
         }
         if (tokens.length > types.length) {
-            this.pushError("Extra arguments [line " + this.line + "] for '" + format + "': " + tokens.slice(types.length, tokens.length).join(', '));
+            this.pushError("Extra arguments [line " + this.line + "] for '" + format + "': "
+                + tokens.slice(types.length, tokens.length).join(', '));
         }
-        for (var i = 0; i < tokens.length; ++i) {
+        for (let i = 0; i < tokens.length; ++i) {
             if (tokens[i].type !== types[i]) {
                 this.pushError("Incorrect argument type [line " + this.line + "] for '" + format + "'");
             }
@@ -661,8 +677,8 @@ class Program {
     }
 
     parseToken(tok) {
-        var value;
-        var type;
+        let value;
+        let type;
         if (tok.charAt(0) == '$') {
             value = this.parseRegister(tok);
             type = this.TOKEN_TYPE_REG;
@@ -678,26 +694,27 @@ class Program {
     }
 
     step() {
-        if (!this.verifyPC(this.pc) || this.pc / 4 >= this.insns.length ) {
+        if (!Program.verifyPC(this.pc) || this.pc / 4 >= this.insns.length ) {
             console.log("PC is invalid!! PC = " + this.pc);
             return;
         }
-        var insn = this.insns[this.pc / 4][0];
+        const insn = this.insns[this.pc / 4][0];
         this.line = this.insns[this.pc / 4][1];
         this.pc += 4;
         if (insn.indexOf(' ') != -1) { // if not bad format, since all instructions have a space after the op
-            var op = insn.substring(0, insn.indexOf(' '));
-            var stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
-            var tokens = [];
-            var tokensIndex = 0;
-            for (var i = 0; i < stringTokens.length; ++i) {
-                var trimmed = stringTokens[i].trim();
+            const op = insn.substring(0, insn.indexOf(' '));
+            const stringTokens = insn.substring(insn.indexOf(' '), insn.length).split(",");
+            const tokens = [];
+            let tokensIndex = 0;
+            for (let i = 0; i < stringTokens.length; ++i) {
+                let trimmed = stringTokens[i].trim();
                 if (trimmed.indexOf('#') != -1) { // remove end of line comments
                     trimmed = trimmed.substring(0, trimmed.indexOf('#')).trim();
                     tokens[tokensIndex] = this.parseToken(trimmed);
                     break;
                 }
-                else if (trimmed.indexOf('(') != -1 && trimmed.indexOf(')') != -1) { // location of memory for load/store operations: offset($register)
+                // location of memory for load/store operations: offset($register)
+                else if (trimmed.indexOf('(') != -1 && trimmed.indexOf(')') != -1) {
                     tokens[tokensIndex] = this.parseToken(trimmed.substring(0, trimmed.indexOf('('))); // parse the offset
                     tokensIndex++;
                     tokens[tokensIndex] = this.parseToken(trimmed.substring(trimmed.indexOf('(')+1, trimmed.indexOf(')'))); // parse the register
@@ -842,6 +859,10 @@ class Program {
                 case "bgez":
                     this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM], "bgez $rs, offset");
                     this.bgez(tokens[0], tokens[1]);
+                    break;
+                case "la":
+                    this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_REG], "la $rt, address");
+                    this.lw(tokens[0], tokens[1], tokens[2]);
                     break;
                 case "lw":
                     this.verifyTokenTypes(tokens, [this.TOKEN_TYPE_REG, this.TOKEN_TYPE_IMM, this.TOKEN_TYPE_REG], "lw $rt, offset(base $rs)");

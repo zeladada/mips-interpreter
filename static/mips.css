@@ -3,12 +3,19 @@ body {
 }
 
 textarea {
-    resize: vertical;
-    width: 100%;
+    resize:vertical;
+    width:100%;
+}
+
+pre {
+    overflow: scroll;
+    width:100%;
+    height:200px;
 }
 
 #errors-container,
 #warning-container {
+    resize: both;
     max-height: 300px;
     overflow: scroll;
 }

@@ -14,16 +14,36 @@
         <div class="page-header">
             <h1>MIPS Interpreter</h1>
         </div>
+        <h4>Features</h4>
+        <ul>
+            <li><em>Reset</em> to load the code, <em>Step</em> one instruction, or <em>Run</em> all instructions</li>
+            <li>Set a breakpoint by clicking on the line number (only for <em>Run</em>)</li>
+            <li>View <a href="#register-table">registers</a> on the right, <a href="#memory-table">memory</a> on the bottom of this page</li>
+            <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
+        </ul>
+        <h4>Supported Instructions</h4>
+        <ul>
+            <li>Immediate Arithmetic: <a href="mips_vol2.pdf#G12.997393"><code>ADDIU</code></a>, <a href="mips_vol2.pdf#G15.997393"><code>ANDI</code></a>, <a href="mips_vol2.pdf#G110.997393"><code>ORI</code></a>, <a href="mips_vol2.pdf#G160.997393"><code>XORI</code></a>, <a href="mips_vol2.pdf#G122.997393"><code>SLTI</code></a>, <a href="mips_vol2.pdf#G123.997876"><code>SLTIU</code></a></li>
+            <li>Register Arithmetic: <a href="mips_vol2.pdf#G13.997413"><code>ADDU</code></a>, <a href="mips_vol2.pdf#G133.997413"><code>SUBU</code></a>, <a href="mips_vol2.pdf#G14.1000988"><code>AND</code></a>, <a href="mips_vol2.pdf#G109.997713"><code>OR</code></a>, <a href="mips_vol2.pdf#G159.997701"><code>XOR</code></a>, <a href="mips_vol2.pdf#G108.997719"><code>NOR</code></a>, <a href="mips_vol2.pdf#G121.997413"><code>SLT</code></a>, <a href="mips_vol2.pdf#G124.997413"><code>SLTU</code></a></li>
+            <li>Move: <a href="mips_vol2.pdf#G89.997389"><code>MOVN</code></a>, <a href="mips_vol2.pdf#G93.997388"><code>MOVZ</code></a></li>
+            <li>Shifts: <a href="mips_vol2.pdf#G119.997413"><code>SLL</code></a>, <a href="mips_vol2.pdf#G128.997413"><code>SRL</code></a>, <a href="mips_vol2.pdf#G126.997413"><code>SRA</code></a>, <a href="mips_vol2.pdf#G120.997413"><code>SLLV</code></a>, <a href="mips_vol2.pdf#G129.997413"><code>SRLV</code></a>, <a href="mips_vol2.pdf#G127.997413"><code>SRAV</code></a></li>
+            <li>Immediate Load: <a href="mips_vol2.pdf#G73.997394"><code>LUI</code></a></li>
+            <li>Control: <a href="mips_vol2.pdf#G62.997375"><code>J</code></a>, <a href="mips_vol2.pdf#G65.997706"><code>JR</code></a>, <a href="mips_vol2.pdf#G63.997375"><code>JAL</code></a>, <a href="mips_vol2.pdf#G64.997414"><code>JALR</code></a>, <a href="mips_vol2.pdf#G26.997393"><code>BEQ</code></a>, <a href="mips_vol2.pdf#G40.997393"><code>BNE</code></a>, <a href="mips_vol2.pdf#G34.997394"><code>BLEZ</code></a>, <a href="mips_vol2.pdf#G32.997394"><code>BGTZ</code></a>, <a href="mips_vol2.pdf#G36.997394"><code>BLTZ</code></a>, <a href="mips_vol2.pdf#G28.997394"><code>BGEZ</code></a></li>
+            <li>Memory: <a href="mips_vol2.pdf#G74.997393"><code>LW</code></a>, <a href="mips_vol2.pdf#G66.997393"><code>LB</code></a>, <a href="mips_vol2.pdf#G67.997393"><code>LBU</code></a>, <a href="mips_vol2.pdf#G134.997393"><code>SW</code></a>, <a href="mips_vol2.pdf#G113.997393"><code>SB</code></a></li>
+        </ul>
+        <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
+        <hr>
         <div id="warnings-container" class="alert alert-warning" style="display: none;"></div>
         <div id="errors-container" class="alert alert-danger" style="display: none;">
             <p class="lead">OOPS! Your MIPS Assembly code ran, but there were errors...</p>
             <div id="errors"></div>
         </div>
+        <p class="lead">Input your MIPS code here:</p>
         <div class="row">
             <div class="col-md-6">
-                <p class="lead">Input your MIPS code here:</p>
+
                 <div class="form-group">
-                    <textarea id="code" rows="15" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+                    <label for="code"></label><textarea id="code" rows="60" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
                 </div>
                 <div class="btn-group btn-group-justified" role="group">
                     <div class="btn-group">
@@ -58,27 +78,12 @@
                 </div>
                 <br>
                 <div id="recent-instruction" class="well">The most recent instructions will be shown here when stepping.</div>
-                <hr>
-                <h4>Features</h4>
-                <ul>
-                    <li><em>Reset</em> to load the code, <em>Step</em> one instruction, or <em>Run</em> all instructions</li>
-                    <li>Set a breakpoint by clicking on the line number (only for <em>Run</em>)</li>
-                    <li>View <a href="#register-table">registers</a> on the right, <a href="#memory-table">memory</a> on the bottom of this page</li>
-                    <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
-                </ul>
-                <h4>Supported Instructions</h4>
-                <ul>
-                    <li>Immediate Arithmetic: <a href="mips_vol2.pdf#G12.997393"><code>ADDIU</code></a>, <a href="mips_vol2.pdf#G15.997393"><code>ANDI</code></a>, <a href="mips_vol2.pdf#G110.997393"><code>ORI</code></a>, <a href="mips_vol2.pdf#G160.997393"><code>XORI</code></a>, <a href="mips_vol2.pdf#G122.997393"><code>SLTI</code></a>, <a href="mips_vol2.pdf#G123.997876"><code>SLTIU</code></a></li>
-                    <li>Register Arithmetic: <a href="mips_vol2.pdf#G13.997413"><code>ADDU</code></a>, <a href="mips_vol2.pdf#G133.997413"><code>SUBU</code></a>, <a href="mips_vol2.pdf#G14.1000988"><code>AND</code></a>, <a href="mips_vol2.pdf#G109.997713"><code>OR</code></a>, <a href="mips_vol2.pdf#G159.997701"><code>XOR</code></a>, <a href="mips_vol2.pdf#G108.997719"><code>NOR</code></a>, <a href="mips_vol2.pdf#G121.997413"><code>SLT</code></a>, <a href="mips_vol2.pdf#G124.997413"><code>SLTU</code></a></li>
-                    <li>Move: <a href="mips_vol2.pdf#G89.997389"><code>MOVN</code></a>, <a href="mips_vol2.pdf#G93.997388"><code>MOVZ</code></a></li>
-                    <li>Shifts: <a href="mips_vol2.pdf#G119.997413"><code>SLL</code></a>, <a href="mips_vol2.pdf#G128.997413"><code>SRL</code></a>, <a href="mips_vol2.pdf#G126.997413"><code>SRA</code></a>, <a href="mips_vol2.pdf#G120.997413"><code>SLLV</code></a>, <a href="mips_vol2.pdf#G129.997413"><code>SRLV</code></a>, <a href="mips_vol2.pdf#G127.997413"><code>SRAV</code></a></li>
-                    <li>Immediate Load: <a href="mips_vol2.pdf#G73.997394"><code>LUI</code></a></li>
-                    <li>Control: <a href="mips_vol2.pdf#G62.997375"><code>J</code></a>, <a href="mips_vol2.pdf#G65.997706"><code>JR</code></a>, <a href="mips_vol2.pdf#G63.997375"><code>JAL</code></a>, <a href="mips_vol2.pdf#G64.997414"><code>JALR</code></a>, <a href="mips_vol2.pdf#G26.997393"><code>BEQ</code></a>, <a href="mips_vol2.pdf#G40.997393"><code>BNE</code></a>, <a href="mips_vol2.pdf#G34.997394"><code>BLEZ</code></a>, <a href="mips_vol2.pdf#G32.997394"><code>BGTZ</code></a>, <a href="mips_vol2.pdf#G36.997394"><code>BLTZ</code></a>, <a href="mips_vol2.pdf#G28.997394"><code>BGEZ</code></a></li>
-                    <li>Memory: <a href="mips_vol2.pdf#G74.997393"><code>LW</code></a>, <a href="mips_vol2.pdf#G66.997393"><code>LB</code></a>, <a href="mips_vol2.pdf#G67.997393"><code>LBU</code></a>, <a href="mips_vol2.pdf#G134.997393"><code>SW</code></a>, <a href="mips_vol2.pdf#G113.997393"><code>SB</code></a></li>
-                </ul>
-                <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
             </div>
+
             <div class="col-md-6">
+                <br>
+                <pre id="log" ></pre>
+                <hr>
                 <div id="register-table" class="table-responsive">
                     <table class="table table-hover table-condensed">
                         <thead>
@@ -91,43 +96,44 @@
                             </tr>
                         </thead>
                         <tbody id="registers">
-                            <tr><td>0</td><td>$0 ($zero)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$1 ($at)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$2 ($v0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$3 ($v1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$4 ($a0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$5 ($a1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$6 ($a2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$7 ($a3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$8 ($t0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$9 ($t1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$10 ($t2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$11 ($t3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$12 ($t4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$13 ($t5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$14 ($t6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$15 ($t7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$16 ($s0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$17 ($s1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$18 ($s2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$19 ($s3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$20 ($s4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$21 ($s5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$22 ($s6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$23 ($s7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$24 ($t8)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$25 ($t9)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$26 ($k0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$27 ($k1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$28 ($gp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$29 ($sp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$30 ($fp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
-                            <tr><td><input class="init-value" type="text" value="0"></td><td>$31 ($ra)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td>0</td><td>$0 ($zero)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$1 ($at)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$2 ($v0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$3 ($v1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$4 ($a0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$5 ($a1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$6 ($a2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$7 ($a3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$8 ($t0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$9 ($t1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$10 ($t2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$11 ($t3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$12 ($t4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$13 ($t5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$14 ($t6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$15 ($t7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$16 ($s0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$17 ($s1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$18 ($s2)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$19 ($s3)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$20 ($s4)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$21 ($s5)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$22 ($s6)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$23 ($s7)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$24 ($t8)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$25 ($t9)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$26 ($k0)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$27 ($k1)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$28 ($gp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$29 ($sp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$30 ($fp)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
+                        <tr><td><input class="init-value" type="text" value="0"></td><td>$31 ($ra)</td><td>0</td><td>0x00000000</td><td>0b00000000000000000000000000000000</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
         <hr>
         <div class="row">
             <div class="col-md-12">
@@ -167,12 +173,14 @@
             </div>
         </div>
     </div>
+
     <script src="static/jquery.min.js"></script>
     <script src="static/sprintf.min.js"></script>
     <script src="static/jquery-linedtextarea.js"></script>
     <script src="static/bootstrap.min.js"></script>
     <script src="static/mips.js"></script>
     <script src="static/FileSaver.js"></script>
+
     <script>
         $('#code').linedtextarea();
         $('.codelines').on('click', '.lineno', function() {
@@ -188,13 +196,55 @@
         });
     </script>
     <script>
+        // Run on page load
+        window.onload = function() {
+
+            // If sessionStorage is storing default values (ex. name), exit the function and do not restore data
+            if (sessionStorage.getItem('code') == "code") {
+                return;
+            }
+
+            // If values are not blank, restore them to the fields
+            const code = sessionStorage.getItem('code');
+            if (code !== null) $('#code').val(code);
+
+            setup();
+        }
+
+        // Before refreshing the page, save the form data to sessionStorage
+        window.onbeforeunload = function() {
+            sessionStorage.setItem("code", $('#code').val());
+        }
+    </script>
+    <script>
+
+        (function () {
+            var old = console.log;
+            var logger = document.getElementById('log');
+
+            console.log = function () {
+                for (var i = 0; i < arguments.length; i++) {
+                    if (typeof arguments[i] == 'object') {
+                        logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(arguments[i], undefined, 2) : arguments[i]) + '<br />';
+                    } else {
+                        logger.innerHTML += arguments[i] + '<br />';
+                    }
+                }
+                logger.scrollTop = logger.scrollHeight;
+            }
+
+        })();
+
+    </script>
+    <script>
+
         "use strict";
-        var globalP = new Program();
-        var initialRegisters = new Int32Array(32);
-        var recentInsns = [];
-        var runner = undefined;
-        var programTerminated = true;
-        var cpuFrequency = 32;
+        let globalP = new Program();
+        let initialRegisters = new Int32Array(32);
+        let recentInsns = [];
+        let runner = undefined;
+        let programTerminated = true;
+        let cpuFrequency = 32;
 
         function setFrequency(freq) {
             cpuFrequency = freq;
@@ -209,7 +259,7 @@
             stop();
             clearAlerts(); // Clear any previous warnings/errors
             programTerminated = false;
-            var code = document.getElementById('code').value;
+            const code = document.getElementById('code').value;
             globalP = new Program(code);
             initializeRegisters(globalP);
             recentInsns = [];
@@ -246,16 +296,13 @@
 
         document.getElementById('stop').addEventListener('click', function() {
             stop();
-            document.getElementById('step').parentElement.style.display = "";
-            document.getElementById('run').parentElement.style.display = "";
-            document.getElementById('stop').parentElement.style.display = "none";
         });
 
         document.getElementById('memory-go').addEventListener('click', displayMemory);
 
         function getRecentInsnsHTML() {
-            var recentInstructionHTML = "";
-            for (var i = 0; i < recentInsns.length; ++i) {
+            let recentInstructionHTML = "";
+            for (let i = 0; i < recentInsns.length; ++i) {
                 // mark the last element as the current instruction executed
                 if (i === recentInsns.length-1) {
                     recentInstructionHTML += '<span class="current">' + "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + '</span>' + ((recentInsns[i][1]) ? " (Delay Slot)":"");
@@ -269,12 +316,12 @@
 
         function step() {
             if (globalP.pc / 4 < globalP.insns.length) {
-                var currentInsn = globalP.insns[globalP.pc / 4];
+                const currentInsn = globalP.insns[globalP.pc / 4];
                 trackInsn(currentInsn, false);
                 document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
                 globalP.step();
-                for (var i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
-                    var delaySlotInsn = globalP.insns[globalP.delaySlotInsnsPC.shift() / 4];
+                for (let i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
+                    const delaySlotInsn = globalP.insns[globalP.delaySlotInsnsPC.shift() / 4];
                     // update the recent instructions with the delay slot instruction
                     if (delaySlotInsn !== undefined) {
                         trackInsn(delaySlotInsn, true);
@@ -294,13 +341,13 @@
         }
 
         function stepWithBreakpoint() {
-            var breakpoints = document.getElementsByClassName('lineselect');
+            const breakpoints = document.getElementsByClassName('lineselect');
             if (breakpoints.length > 0) { // there is a breakpoint
-                var breaklines = [];
-                for (var i = 0; i < breakpoints.length; ++i) {
+                const breaklines = [];
+                for (let i = 0; i < breakpoints.length; ++i) {
                     breaklines.push(parseInt(breakpoints[i].innerHTML));
                 }
-                var currentInsn = globalP.insns[globalP.pc / 4];
+                const currentInsn = globalP.insns[globalP.pc / 4];
                 if (currentInsn !== undefined) {
                     if (breaklines.indexOf(currentInsn[1]) == -1)  { // not at a breakpoint
                         step();
@@ -332,6 +379,9 @@
                 clearInterval(runner);
             }
             runner = undefined;
+            document.getElementById('step').parentElement.style.display = "";
+            document.getElementById('run').parentElement.style.display = "";
+            document.getElementById('stop').parentElement.style.display = "none";
         }
 
         function trackInsn(insn, isDelaySlot) {
@@ -342,8 +392,8 @@
         }
 
         function displayRegisters() {
-            var registers = globalP.getRegisters();
-            var registersHTML = sprintf('<tr><td>%d</td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
+            const registers = globalP.getRegisters();
+            let registersHTML = sprintf('<tr><td>%d</td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
                 registers[0], 0, getRegisterSyntacticSugar(0), registers[0], registers[0] >>> 0, (registers[i] >>> 0).toString(2));
             for (var i = 1; i < 32; ++i) {
                 registersHTML += sprintf('<tr><td><input class="init-value" type="text" value="%d"></td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
@@ -355,22 +405,22 @@
         }
 
         function displayMemory() {
-            var memory = globalP.getMemory();
-            var memoryHTML = "";
-            var memAddress = parseInt(document.getElementById('memory-address').value) >>> 0;
-            var addr = memAddress - (memAddress % 4); // keep memory locations as multiple of 4
+            const memory = globalP.getMemory();
+            let memoryHTML = "";
+            const memAddress = parseInt(document.getElementById('memory-address').value) >>> 0;
+            const addr = memAddress - (memAddress % 4); // keep memory locations as multiple of 4
             if (!memory.isValidAddress(addr)) {
                 memoryHTML = '<tr class="danger"><td>Invalid memory location: ' + sprintf("0x%x", memAddress) + '. Memory addresses must be from 0x00000000 - 0x7fffffff</td><td></td><td></td><td></td></tr>';
             }
             else {
-                var start = Math.max(addr - 40, 0x00000000);
-                var end = Math.min(addr + 40, 0x80000000);
-                for (var i = start; i < end; i += 4) {
-                    var lsb = memory.getMem(i);
-                    var byte2 = memory.getMem(i+1) << 8;
-                    var byte3 = memory.getMem(i+2) << 16;
-                    var msb = memory.getMem(i+3) << 24;
-                    var memValue = msb | byte3 | byte2 | lsb;
+                const start = Math.max(addr - 40, 0x00000000);
+                const end = Math.min(addr + 40, 0x80000000);
+                for (let i = start; i < end; i += 4) {
+                    const lsb = memory.getMem(i);
+                    const byte2 = memory.getMem(i + 1) << 8;
+                    const byte3 = memory.getMem(i + 2) << 16;
+                    const msb = memory.getMem(i + 3) << 24;
+                    const memValue = msb | byte3 | byte2 | lsb;
                     memoryHTML += (memValue == 0) ? '<tr>' : '<tr class="info">';
                     memoryHTML += sprintf("<td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</td>",
                         i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
@@ -383,7 +433,7 @@
         }
 
         function displayErrors() {
-            var errors = globalP.getErrors();
+            const errors = globalP.getErrors();
             if (errors.length > 0) {
                 document.getElementById('errors').innerHTML = errors.join('<br>');
                 document.getElementById('errors-container').style.display = "";
@@ -399,10 +449,10 @@
 
         function initializeRegisters(program) {
             initialRegisters = new Int32Array(32);
-            var initDOM = document.getElementById('registers').getElementsByClassName('init-value');
+            let initDOM = document.getElementById('registers').getElementsByClassName('init-value');
             initialRegisters[0] = 0; // zero register is hard-wired to 0
-            for (var i = 1; i < 32; i++) {
-                var value = parseInt(initDOM[i-1].value) >> 0;
+            for (let i = 1; i < 32; i++) {
+                const value = parseInt(initDOM[i - 1].value) >> 0;
                 initialRegisters[i] = value;
             }
             program.registers = initialRegisters.slice();
